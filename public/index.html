@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d2f27" />
+    <meta name="description" content="Live fantasy leaderboard for the 2026 John Deere Classic simulation." />
+    <title>Open Championship Prep | John Deere Fantasy Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="grain"></div>
+    <header class="hero">
+      <nav class="nav shell">
+        <a class="brand" href="/" aria-label="John Deere simulation leaderboard home">
+          <span class="brand-mark">J</span>
+          <span>Open Prep 2026 <small>John Deere simulation</small></span>
+        </a>
+        <div class="live-status" id="liveStatus"><span></span> Connecting</div>
+      </nav>
+      <div class="hero-content shell">
+        <div>
+          <p class="eyebrow">John Deere Classic · July 2–5, 2026</p>
+          <h1>B4R</h1>
+          <p class="hero-copy">100 teams. Eight main golfers. Best four rounds lead the board.</p>
+        </div>
+        <div class="course-card">
+          <span class="course-number">01</span>
+          <div>
+            <p>TPC Deere Run</p>
+            <span>Silvis, Illinois · Par 71</span>
+          </div>
+          <svg viewBox="0 0 72 52" aria-hidden="true"><path d="M3 43c8-16 19-6 26-19C36 11 47 7 68 8M5 47c13-7 20 2 31-7 8-7 15-9 31-7"/><circle cx="52" cy="14" r="3"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell main">
+      <section class="controls" aria-label="Leaderboard controls">
+        <div class="control-groups">
+          <div class="game-tabs" id="gameTabs" aria-label="Game view">
+            <button class="active" data-game="b4r" aria-pressed="true">B4R</button>
+            <button data-game="brow" aria-pressed="false">BROW</button>
+            <button data-game="art" aria-pressed="false">ART</button>
+            <button data-game="altbrod" aria-pressed="false">Alt BROD</button>
+            <button data-game="straight" aria-pressed="false">Straight</button>
+            <button data-game="flush" aria-pressed="false">Flush</button>
+          </div>
+          <div class="round-tabs" id="roundTabs">
+            <button data-round="1">Round 1</button>
+            <button data-round="2">Round 2</button>
+            <button data-round="3">Round 3</button>
+            <button data-round="4">Final Round</button>
+          </div>
+        </div>
+        <label class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="searchInput" type="search" placeholder="Find a team or golfer" />
+        </label>
+      </section>
+
+      <section class="summary" id="summary" aria-label="Round summary"></section>
+
+      <section class="leaderboard-head">
+        <div>
+          <p class="section-kicker" id="boardKicker">Best four rounds</p>
+          <h2 id="boardTitle">Round 1 B4R leaderboard</h2>
+        </div>
+        <div class="updated" id="updatedAt">Waiting for scores…</div>
+      </section>
+
+      <div class="column-labels" aria-hidden="true">
+        <span>Pos</span><span id="teamHeader">Team</span><span id="cumulativeHeader">Best 4 total</span><span id="roundHeader">Rounds counted</span><span id="golfersHeader">8 main golfers</span>
+      </div>
+      <section id="leaderboard" class="leaderboard" aria-live="polite">
+        <div class="loading-card"><div class="spinner"></div><p>Walking the course for live scores…</p></div>
+      </section>
+    </main>
+
+    <footer class="footer shell">
+      <p>Open Championship prep · John Deere Classic simulation · Unofficial scoring tracker</p>
+      <p>Live scoring via ESPN · Auto-refreshes every 60 seconds</p>
+    </footer>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
