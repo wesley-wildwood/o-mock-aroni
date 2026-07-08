@@ -1,7 +1,7 @@
-const EVENT_ID = process.env.ESPN_EVENT_ID || "401811954";
+const EVENT_ID = process.env.ESPN_EVENT_ID || "401811955";
 const ESPN_URL = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?event=${EVENT_ID}`;
-const EVENT_PAR = Number.parseInt(process.env.EVENT_PAR || "71", 10);
-const EVENT_VENUE = process.env.EVENT_VENUE || "TPC Deere Run";
+const EVENT_PAR = Number.parseInt(process.env.EVENT_PAR || "70", 10);
+const EVENT_VENUE = process.env.EVENT_VENUE || "The Renaissance Club";
 
 function parseToPar(value) {
   if (value === "E" || value === "-" || value == null) return 0;
@@ -52,7 +52,16 @@ function shapePlayer(competitor, { currentRound, cutLine, par }) {
   const completed36 = openingRounds.every((round) => round && round.linescores?.length >= 18 && Number.isFinite(round.value));
   const scoreAfter36 = completed36 ? openingRounds[0].value + openingRounds[1].value - par * 2 : null;
   let status = "active";
-  if (currentRound >= 3 && cutLine != null) {
+  const rawStatus = [
+    competitor.status?.type?.name,
+    competitor.status?.type?.description,
+    competitor.status?.type?.detail,
+    competitor.score,
+    competitor.displayValue
+  ].filter(Boolean).join(" ").toLowerCase();
+  if (rawStatus.includes("withdraw") || /\bwd\b/.test(rawStatus)) {
+    status = "withdrawn";
+  } else if (currentRound >= 3 && cutLine != null) {
     status = !completed36 ? "withdrawn" : scoreAfter36 > cutLine ? "missed_cut" : "active";
   }
 

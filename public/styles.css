@@ -120,20 +120,21 @@ body[data-game="flush"] .top-1 .rank span { background: #d8c0df; }
 .golfer-metric strong { font-family: var(--serif); font-size: 19px; line-height: 1; font-weight: 400; }
 .golfer-metric.tournament strong { color: var(--rust); font-size: 15px; }
 .golfer-progress { justify-self: end; color: var(--muted); font-size: 7px; text-transform: uppercase; white-space: nowrap; }
-.pool-row { min-height: 108px; }
-.pool-row .golfers { grid-template-columns: repeat(8, minmax(116px, 1fr)); }
+.pool-row { min-height: 178px; }
+.pool-row .golfers { grid-template-columns: repeat(4, minmax(175px, 1fr)); grid-auto-rows: 1fr; }
 .pool-row .golfers.alt-pool { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
-.pool-golfer { min-width: 0; overflow: hidden; padding: 7px 7px; border-left: 1px solid #e8ebe7; background: #fcfcfa; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+.pool-golfer { min-width: 0; overflow: hidden; padding: 9px 10px; border-left: 1px solid #e8ebe7; border-top: 1px solid #f0f2ef; background: #fcfcfa; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
 .pool-golfer.inactive { background: #f1f1ee; }
 .pool-golfer.inactive .golfer-name { color: #89928e; text-decoration: line-through; text-decoration-thickness: 1px; }
 .pool-golfer-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px; }
 .pool-golfer-top .inactive-label { grid-column: 2; grid-row: 1; }
-.pool-golfer-top .alt-total { grid-column: 1 / -1; }
-.round-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; margin-top: 6px; min-width: 0; }
-.round-chip { min-width: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 1px; padding: 3px 3px; border: 1px solid #e4e9e6; color: var(--muted); }
-.round-chip span { font-size: 6px; font-weight: 700; }
-.round-chip strong { min-width: 0; justify-self: end; font-family: var(--serif); color: var(--ink); font-size: 13px; line-height: 1; font-weight: 400; }
-.round-chip small { grid-column: 1 / -1; font-size: 5px; line-height: 1; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pool-golfer-top .alt-total, .pool-golfer-top .replacement-label { grid-column: 1 / -1; }
+.replacement-label { color: #2f6d74; font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.round-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 7px; min-width: 0; }
+.round-chip { min-width: 0; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 2px; padding: 4px 5px; border: 1px solid #e4e9e6; color: var(--muted); }
+.round-chip span { font-size: 7px; font-weight: 700; }
+.round-chip strong { min-width: 0; justify-self: end; font-family: var(--serif); color: var(--ink); font-size: 16px; line-height: 1; font-weight: 400; }
+.round-chip small { grid-column: 1 / -1; font-size: 6px; line-height: 1; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .round-chip.counting { border-color: #accd68; background: #edf4dd; box-shadow: inset 0 -2px var(--lime); }
 body[data-game="brow"] .round-chip.counting { border-color: #e2a184; background: #f8e9e2; box-shadow: inset 0 -2px var(--rust); }
 body[data-game="art"] .round-chip.counting { border-color: #91b7ca; background: #e7f1f5; box-shadow: inset 0 -2px #6d9db5; }
@@ -195,7 +196,7 @@ body[data-game="flush"] .award-row .golfer.counting { background: #f0e8f2; box-s
   .total strong, .round-score strong { font-size: 24px; }
   .total span, .round-score span { display: block; margin: 2px 0 0; }
   .golfers { overflow-x: auto; grid-template-columns: repeat(5, 145px); }
-  .pool-row .golfers { grid-template-columns: repeat(8, 142px); }
+  .pool-row .golfers { grid-template-columns: repeat(4, 190px); }
   .pool-row .golfers.alt-pool { grid-template-columns: repeat(4, 170px); }
   .alt-row .golfers { grid-template-columns: repeat(3, 210px); }
   .award-row .golfers { grid-template-columns: repeat(5, 145px); }

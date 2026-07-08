@@ -26,4 +26,4 @@ createServer(async (request, response) => {
     response.writeHead(404);
     response.end("Not found");
   }
-}).listen(port, host, () => console.log(`John Deere leaderboard: http://${host}:${port}`));
+}).listen(port, host, () => console.log(`Scottish Open leaderboard: http://${host}:${port}`));

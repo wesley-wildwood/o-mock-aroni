@@ -115,6 +115,7 @@ function displayRoundScore(round) {
 function golferCard(golfer) {
   const inactive = golfer.player?.status === "missed_cut" || golfer.player?.status === "withdrawn";
   const inactiveLabel = golfer.player?.status === "withdrawn" ? "WD" : "MC";
+  const replacement = golfer.replacement ? `<span class="replacement-label">Alt for ${escapeHtml(golfer.replacementFor)}</span>` : "";
   const rounds = golfer.rounds.map((round) => `<div class="round-chip ${round.counting ? "counting" : ""} ${round.state === "missed_cut" || round.state === "withdrawn" ? "inactive" : ""}">
     <span>R${round.roundNumber}</span>
     <strong>${displayRoundScore(round)}</strong>
@@ -124,6 +125,7 @@ function golferCard(golfer) {
     <div class="pool-golfer-top">
       <span class="golfer-name">${escapeHtml(golfer.pickName)}</span>
       ${inactive ? `<span class="inactive-label">${inactiveLabel}</span>` : ""}
+      ${replacement}
       <span class="alt-total">Total ${tournamentScore(golfer.player?.tournamentToPar)}</span>
     </div>
     <div class="round-chips">${rounds}</div>
@@ -263,8 +265,8 @@ async function refreshScores({ initial = false } = {}) {
 }
 
 async function init() {
-  const response = await fetch("/data/john-deere-picks.csv");
-  if (!response.ok) throw new Error("The John Deere picks file could not be loaded");
+  const response = await fetch("/data/scottish-open-picks.csv");
+  if (!response.ok) throw new Error("The Scottish Open picks file could not be loaded");
   state.picks = parsePicksCsv(await response.text());
   await refreshScores({ initial: true });
   window.setInterval(refreshScores, 60_000);

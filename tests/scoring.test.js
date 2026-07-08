@@ -48,7 +48,15 @@ test("normalizes accented live-feed names", () => {
 
 test("parses quoted golfer names from CSV", () => {
   const rows = parsePicksCsv('Contestant,Golfer 1\r\n"Smith, Sam","McIlroy, Rory"\r\n');
-  assert.deepEqual(rows, [{ Contestant: "Smith, Sam", "Golfer 1": "McIlroy, Rory" }]);
+  assert.equal(rows[0].Contestant, "Smith, Sam");
+  assert.equal(rows[0]["Golfer 1"], "McIlroy, Rory");
+});
+
+test("normalizes Scottish Open team and alternate headers", () => {
+  const [row] = parsePicksCsv('Teams,Golfer 1,First Alt,Second Alt,Third Alt,Fourth Alt\r\n"Smith, Sam","Main, Max","Alt, One","Alt, Two","Alt, Three","Alt, Four"\r\n');
+  assert.equal(row.Contestant, "Smith, Sam");
+  assert.equal(row["Alt 1"], "Alt, One");
+  assert.equal(row["Alt 4"], "Alt, Four");
 });
 
 test("uses current score to par as 18-hole pace", () => {
@@ -98,6 +106,30 @@ test("BROW sums each main golfer's best round of the week", () => {
 
   assert.equal(row.total, 558);
   assert.equal(row.countedRoundCount, 8);
+});
+
+test("BROW replaces withdrawn starters with the first alternate", () => {
+  const team = pick("WD", {
+    1: [68, 69],
+    2: [70],
+    3: [71],
+    4: [72],
+    5: [73],
+    6: [74],
+    7: [75],
+    8: [76]
+  }, { 1: [65, 66] });
+  const withdrawn = team.players.find((player) => player.name === "Player WD Main1");
+  withdrawn.status = "withdrawn";
+
+  const [row] = buildBROWLeaderboard([team.row], team.players, 2, 71);
+  const replacement = row.golfers[0];
+
+  assert.equal(replacement.replacement, true);
+  assert.equal(replacement.pickName, "WD Alt1, Player");
+  assert.equal(replacement.replacementFor, "WD Main1, Player");
+  assert.equal(row.countedRounds.some((round) => round.pickName === "WD Alt1, Player" && round.score === 65), true);
+  assert.equal(row.countedRounds.some((round) => round.pickName === "WD Main1, Player"), false);
 });
 
 test("ART sums all eight main golfers across rounds one and two", () => {
@@ -154,11 +186,11 @@ test("missed-cut golfers remain visible but cannot count in weekend rounds", () 
 
   assert.equal(cutGolfer.rounds[2].state, "missed_cut");
   assert.equal(cutGolfer.rounds[2].score, null);
-  assert.equal(row.countedRounds.some((round) => round.key === "cutmain1player:3"), false);
+  assert.equal(row.countedRounds.some((round) => round.key === "Golfer 1:cutmain1player:3"), false);
 });
 
-test("John Deere picks include 100 teams with 8 main golfers and 4 alternates", () => {
-  const rows = parsePicksCsv(readFileSync(new URL("../public/data/john-deere-picks.csv", import.meta.url), "utf8"));
+test("Scottish Open picks include 100 teams with 8 main golfers and 4 alternates", () => {
+  const rows = parsePicksCsv(readFileSync(new URL("../public/data/scottish-open-picks.csv", import.meta.url), "utf8"));
   assert.equal(rows.length, 100);
   assert.equal(new Set(rows.map((row) => row.Contestant)).size, 100);
   for (const row of rows) {
