@@ -59,10 +59,10 @@ function normalizePickRow(row) {
 }
 
 export function roundPace(round, par = 71) {
-  if (!round) return { score: par, state: "not_started" };
+  if (!round) return { score: null, state: "not_started" };
   if (round.strokes != null && round.holes >= 18) return { score: round.strokes, state: "complete" };
-  if (round.toPar != null) return { score: par + round.toPar, state: round.holes > 0 ? "playing" : "not_started" };
-  if (round.status === "not_started") return { score: par, state: "not_started" };
+  if (round.toPar != null) return { score: round.holes > 0 ? par + round.toPar : null, state: round.holes > 0 ? "playing" : "not_started" };
+  if (round.status === "not_started") return { score: null, state: "not_started" };
   return { score: null, state: round.status || "unavailable" };
 }
 
@@ -162,10 +162,14 @@ function sortedRounds(rounds) {
   return [...rounds].sort((a, b) => a.score - b.score || a.roundNumber - b.roundNumber || a.pickName.localeCompare(b.pickName));
 }
 
-function markCountingRounds(golfers, countingKeys) {
+function markCountingRounds(golfers, countingKeys, tieBreakKeys = new Set()) {
   return golfers.map((golfer) => ({
     ...golfer,
-    rounds: golfer.rounds.map((round) => ({ ...round, counting: countingKeys.has(round.key) }))
+    rounds: golfer.rounds.map((round) => ({
+      ...round,
+      counting: countingKeys.has(round.key),
+      tieBreaking: tieBreakKeys.has(round.key)
+    }))
   }));
 }
 
@@ -183,14 +187,18 @@ export function buildB4RLeaderboard(picks, livePlayers, selectedRound, par = 71)
   const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
     const postedRounds = sortedRounds(allRounds(team.golfers));
     const countedRounds = postedRounds.slice(0, 4);
+    const tieBreakRounds = postedRounds.slice(4);
+    const tieBreakRound = tieBreakRounds[0] || null;
     const countingKeys = new Set(countedRounds.map((round) => round.key));
+    const tieBreakKeys = new Set(tieBreakRound ? [tieBreakRound.key] : []);
     const total = countedRounds.length ? countedRounds.reduce((sum, round) => sum + round.score, 0) : null;
     return {
       ...team,
-      golfers: markCountingRounds(team.golfers, countingKeys),
+      golfers: markCountingRounds(team.golfers, countingKeys, tieBreakKeys),
       countedRounds,
       countedRoundCount: countedRounds.length,
-      tieBreakScores: postedRounds.slice(4).map((round) => round.score),
+      tieBreakRound,
+      tieBreakScores: tieBreakRounds.map((round) => round.score),
       total,
       toPar: total == null ? null : total - par * countedRounds.length
     };

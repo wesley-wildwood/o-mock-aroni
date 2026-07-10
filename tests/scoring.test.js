@@ -62,7 +62,8 @@ test("normalizes Scottish Open team and alternate headers", () => {
 test("uses current score to par as 18-hole pace", () => {
   assert.deepEqual(roundPace({ strokes: 34, toPar: -1, holes: 9 }, 71), { score: 70, state: "playing" });
   assert.deepEqual(roundPace({ strokes: 68, toPar: -3, holes: 18 }, 71), { score: 68, state: "complete" });
-  assert.deepEqual(roundPace({ strokes: null, toPar: null, holes: 0, status: "not_started" }, 71), { score: 71, state: "not_started" });
+  assert.deepEqual(roundPace({ strokes: null, toPar: null, holes: 0, status: "not_started" }, 71), { score: null, state: "not_started" });
+  assert.deepEqual(roundPace({ strokes: null, toPar: 0, holes: 0, status: "not_started" }, 71), { score: null, state: "not_started" });
 });
 
 test("B4R takes the best four rounds from any of the eight main golfers", () => {
@@ -87,8 +88,32 @@ test("B4R ties are broken by the next best available rounds", () => {
 
   assert.equal(rows[0].contestant, "A");
   assert.equal(rows[0].total, 278);
+  assert.equal(rows[0].tieBreakRound.score, 72);
+  assert.equal(rows[0].golfers.some((golfer) => golfer.rounds.some((round) => round.tieBreaking && round.score === 72)), true);
   assert.deepEqual(rows[0].tieBreakScores.slice(0, 2), [72, 75]);
   assert.deepEqual(rows[1].tieBreakScores.slice(0, 2), [73, 74]);
+});
+
+test("not-started rounds do not count toward B4R standings", () => {
+  const team = pick("Waiting", {
+    1: [68],
+    2: [69],
+    3: [70],
+    4: [71],
+    5: [72],
+    6: [73],
+    7: [74],
+    8: [75]
+  });
+  team.players.forEach((player) => {
+    player.rounds[2] = { strokes: null, toPar: 0, holes: 0, status: "not_started" };
+  });
+
+  const [row] = buildB4RLeaderboard([team.row], team.players, 2, 71);
+
+  assert.equal(row.total, 278);
+  assert.equal(row.countedRounds.every((round) => round.roundNumber === 1), true);
+  assert.equal(row.golfers.some((golfer) => golfer.rounds.some((round) => round.roundNumber === 2 && round.score != null)), false);
 });
 
 test("BROW sums each main golfer's best round of the week", () => {
@@ -104,7 +129,7 @@ test("BROW sums each main golfer's best round of the week", () => {
   });
   const [row] = buildBROWLeaderboard([team.row], team.players, 2, 71);
 
-  assert.equal(row.total, 558);
+  assert.equal(row.total, 566);
   assert.equal(row.countedRoundCount, 8);
 });
 

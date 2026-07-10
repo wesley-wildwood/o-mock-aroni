@@ -116,7 +116,7 @@ function golferCard(golfer) {
   const inactive = golfer.player?.status === "missed_cut" || golfer.player?.status === "withdrawn";
   const inactiveLabel = golfer.player?.status === "withdrawn" ? "WD" : "MC";
   const replacement = golfer.replacement ? `<span class="replacement-label">Alt for ${escapeHtml(golfer.replacementFor)}</span>` : "";
-  const rounds = golfer.rounds.map((round) => `<div class="round-chip ${round.counting ? "counting" : ""} ${round.state === "missed_cut" || round.state === "withdrawn" ? "inactive" : ""}">
+  const rounds = golfer.rounds.map((round) => `<div class="round-chip ${round.counting ? "counting" : ""} ${round.tieBreaking ? "tiebreak" : ""} ${round.state === "missed_cut" || round.state === "withdrawn" ? "inactive" : ""}">
     <span>R${round.roundNumber}</span>
     <strong>${displayRoundScore(round)}</strong>
     <small>${golferStatus(round)}</small>
@@ -177,7 +177,11 @@ function configureView() {
 }
 
 function rowSubtitle(row) {
-  if (state.selectedGame === "b4r") return `Best rounds: ${row.countedRounds.map((round) => `R${round.roundNumber} ${round.pickName} ${round.score}`).join(" · ") || "Waiting"}`;
+  if (state.selectedGame === "b4r") {
+    const best = row.countedRounds.map((round) => `R${round.roundNumber} ${round.pickName} ${round.score}`).join(" · ") || "Waiting";
+    const tiebreak = row.tieBreakRound ? `Next: R${row.tieBreakRound.roundNumber} ${row.tieBreakRound.pickName} ${row.tieBreakRound.score}` : "Next: waiting";
+    return `Best: ${best} · ${tiebreak}`;
+  }
   if (state.selectedGame === "brow") return `${row.countedRoundCount}/8 golfers have a best round`;
   if (state.selectedGame === "art") return `Rounds 1-${row.throughRound} across 8 golfers`;
   if (state.selectedGame === "altbrod") return row.countedRounds.map((round) => `R${round.roundNumber} ${round.pickName} ${round.score}`).join(" · ") || "Waiting";
@@ -201,12 +205,14 @@ function primaryMeta(row) {
 function secondaryValue(row) {
   if (state.selectedGame === "straight") return Number.isFinite(row.startScore) ? row.startScore : "—";
   if (state.selectedGame === "flush") return row.flushScore ?? "—";
+  if (state.selectedGame === "b4r" && state.selectedRound > 1) return row.tieBreakRound?.score ?? "—";
   return `${row.countedRoundCount || 0}`;
 }
 
 function secondaryMeta() {
   if (state.selectedGame === "straight") return "Start";
   if (state.selectedGame === "flush") return "Score";
+  if (state.selectedGame === "b4r" && state.selectedRound > 1) return "Next";
   return "Rounds";
 }
 
@@ -237,6 +243,8 @@ function render() {
   elements.tabs.querySelectorAll("button").forEach((button) => button.classList.toggle("active", Number(button.dataset.round) === state.selectedRound));
   configureView();
   document.body.dataset.game = state.selectedGame;
+  document.body.dataset.round = String(state.selectedRound);
+  document.body.classList.toggle("hide-round-count", state.selectedGame === "b4r" && state.selectedRound > 1);
   renderSummary(rows);
 
   if (!filtered.length) {
