@@ -103,6 +103,7 @@ function rankedScoreGroups(rows, scoreValue, compareWithinScore = () => 0) {
 
   let index = 0;
   let baseRank = 1;
+  let groupNumber = 0;
   const ranked = [];
   while (index < rows.length) {
     const score = scoreValue(rows[index]);
@@ -111,10 +112,13 @@ function rankedScoreGroups(rows, scoreValue, compareWithinScore = () => 0) {
       group.push(rows[index]);
       index += 1;
     }
+    const isFirstGroup = groupNumber === 0;
     group.forEach((row, groupIndex) => {
-      ranked.push({ ...row, rank: groupIndex === 0 ? baseRank : baseRank + 1 });
+      const rank = isFirstGroup && group.length > 1 && groupIndex > 0 ? baseRank + 1 : baseRank;
+      ranked.push({ ...row, rank });
     });
     baseRank += group.length;
+    groupNumber += 1;
   }
   return ranked;
 }

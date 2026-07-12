@@ -98,12 +98,21 @@ test("B4R rank keeps score groups while ordering ties by tiebreakers", () => {
   const a = pick("A", { 1: [68], 2: [69], 3: [70], 4: [71], 5: [72], 6: [80], 7: [81], 8: [82] });
   const b = pick("B", { 1: [68], 2: [69], 3: [70], 4: [71], 5: [73], 6: [74], 7: [75], 8: [76] });
   const c = pick("C", { 1: [69], 2: [70], 3: [71], 4: [72], 5: [73], 6: [74], 7: [75], 8: [76] });
-  const rows = buildB4RLeaderboard([b.row, c.row, a.row], [...b.players, ...c.players, ...a.players], 1, 71);
+  const d = pick("D", { 1: [69], 2: [70], 3: [71], 4: [72], 5: [74], 6: [75], 7: [76], 8: [77] });
+  const e = pick("E", { 1: [70], 2: [71], 3: [72], 4: [73], 5: [74], 6: [75], 7: [76], 8: [77] });
+  const rows = buildB4RLeaderboard(
+    [b.row, d.row, e.row, c.row, a.row],
+    [...b.players, ...d.players, ...e.players, ...c.players, ...a.players],
+    1,
+    71
+  );
 
   assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
     ["A", 278, 1],
     ["B", 278, 2],
-    ["C", 282, 3]
+    ["C", 282, 3],
+    ["D", 282, 3],
+    ["E", 286, 5]
   ]);
 });
 
@@ -229,12 +238,21 @@ test("Alt BROD rank keeps score groups without breaking tied totals", () => {
   const a = pick("A", {}, { 1: [68], 2: [80], 3: [81], 4: [82] });
   const b = pick("B", {}, { 1: [68], 2: [79], 3: [81], 4: [82] });
   const c = pick("C", {}, { 1: [70], 2: [80], 3: [81], 4: [82] });
-  const rows = buildAltBRODLeaderboard([b.row, c.row, a.row], [...b.players, ...c.players, ...a.players], 1, 71);
+  const d = pick("D", {}, { 1: [70], 2: [79], 3: [81], 4: [82] });
+  const e = pick("E", {}, { 1: [72], 2: [80], 3: [81], 4: [82] });
+  const rows = buildAltBRODLeaderboard(
+    [b.row, d.row, e.row, c.row, a.row],
+    [...b.players, ...d.players, ...e.players, ...c.players, ...a.players],
+    1,
+    71
+  );
 
   assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
     ["A", 68, 1],
     ["B", 68, 2],
-    ["C", 70, 3]
+    ["C", 70, 3],
+    ["D", 70, 3],
+    ["E", 72, 5]
   ]);
 });
 
