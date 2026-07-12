@@ -94,6 +94,19 @@ test("B4R ties are broken by the next best available rounds", () => {
   assert.deepEqual(rows[1].tieBreakScores.slice(0, 2), [73, 74]);
 });
 
+test("B4R rank keeps score groups while ordering ties by tiebreakers", () => {
+  const a = pick("A", { 1: [68], 2: [69], 3: [70], 4: [71], 5: [72], 6: [80], 7: [81], 8: [82] });
+  const b = pick("B", { 1: [68], 2: [69], 3: [70], 4: [71], 5: [73], 6: [74], 7: [75], 8: [76] });
+  const c = pick("C", { 1: [69], 2: [70], 3: [71], 4: [72], 5: [73], 6: [74], 7: [75], 8: [76] });
+  const rows = buildB4RLeaderboard([b.row, c.row, a.row], [...b.players, ...c.players, ...a.players], 1, 71);
+
+  assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
+    ["A", 278, 1],
+    ["B", 278, 2],
+    ["C", 282, 3]
+  ]);
+});
+
 test("not-started rounds do not count toward B4R standings", () => {
   const team = pick("Waiting", {
     1: [68],
@@ -131,6 +144,35 @@ test("BROW sums each main golfer's best round of the week", () => {
 
   assert.equal(row.total, 566);
   assert.equal(row.countedRoundCount, 8);
+});
+
+test("BROW ties use the cumulative second-best round total", () => {
+  const a = pick("A", {
+    1: [68, 70],
+    2: [69, 71],
+    3: [70, 72],
+    4: [71, 73],
+    5: [72, 74],
+    6: [73, 75],
+    7: [74, 76],
+    8: [75, 77]
+  });
+  const b = pick("B", {
+    1: [68, 71],
+    2: [69, 72],
+    3: [70, 73],
+    4: [71, 74],
+    5: [72, 75],
+    6: [73, 76],
+    7: [74, 77],
+    8: [75, 78]
+  });
+  const rows = buildBROWLeaderboard([b.row, a.row], [...b.players, ...a.players], 2, 71);
+
+  assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.tieBreakTotal, row.rank]), [
+    ["A", 572, 588, 1],
+    ["B", 572, 596, 2]
+  ]);
 });
 
 test("BROW replaces withdrawn starters with the first alternate", () => {
@@ -180,6 +222,19 @@ test("Alt BROD takes the best alternate round each day", () => {
     ["ALT Alt2, Player", 1, 69],
     ["ALT Alt3, Player", 2, 68],
     ["ALT Alt4, Player", 3, 67]
+  ]);
+});
+
+test("Alt BROD rank keeps score groups without breaking tied totals", () => {
+  const a = pick("A", {}, { 1: [68], 2: [80], 3: [81], 4: [82] });
+  const b = pick("B", {}, { 1: [68], 2: [79], 3: [81], 4: [82] });
+  const c = pick("C", {}, { 1: [70], 2: [80], 3: [81], 4: [82] });
+  const rows = buildAltBRODLeaderboard([b.row, c.row, a.row], [...b.players, ...c.players, ...a.players], 1, 71);
+
+  assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
+    ["A", 68, 1],
+    ["B", 68, 2],
+    ["C", 70, 3]
   ]);
 });
 

@@ -182,7 +182,7 @@ function rowSubtitle(row) {
     const tiebreak = row.tieBreakRound ? `Next: R${row.tieBreakRound.roundNumber} ${row.tieBreakRound.pickName} ${row.tieBreakRound.score}` : "Next: waiting";
     return `Best: ${best} · ${tiebreak}`;
   }
-  if (state.selectedGame === "brow") return `${row.countedRoundCount}/8 golfers have a best round`;
+  if (state.selectedGame === "brow") return `${row.countedRoundCount}/8 golfers have a best round · BROW2 ${row.tieBreakTotal ?? "waiting"}`;
   if (state.selectedGame === "art") return `Rounds 1-${row.throughRound} across 8 golfers`;
   if (state.selectedGame === "altbrod") return row.countedRounds.map((round) => `R${round.roundNumber} ${round.pickName} ${round.score}`).join(" · ") || "Waiting";
   if (state.selectedGame === "straight") return row.runScores?.length ? row.runScores.join("–") : "No string yet";
@@ -206,6 +206,7 @@ function secondaryValue(row) {
   if (state.selectedGame === "straight") return Number.isFinite(row.startScore) ? row.startScore : "—";
   if (state.selectedGame === "flush") return row.flushScore ?? "—";
   if (state.selectedGame === "b4r" && state.selectedRound > 1) return row.tieBreakRound?.score ?? "—";
+  if (state.selectedGame === "brow") return row.tieBreakTotal ?? "—";
   return `${row.countedRoundCount || 0}`;
 }
 
@@ -213,6 +214,7 @@ function secondaryMeta() {
   if (state.selectedGame === "straight") return "Start";
   if (state.selectedGame === "flush") return "Score";
   if (state.selectedGame === "b4r" && state.selectedRound > 1) return "Next";
+  if (state.selectedGame === "brow") return "BROW2";
   return "Rounds";
 }
 

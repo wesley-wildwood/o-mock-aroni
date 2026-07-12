@@ -95,6 +95,30 @@ function rankedRows(rows, compare, sameRank = (a, b) => compare(a, b) === 0) {
   });
 }
 
+function rankedScoreGroups(rows, scoreValue, compareWithinScore = () => 0) {
+  rows.sort((a, b) => {
+    const scoreDifference = (scoreValue(a) ?? Infinity) - (scoreValue(b) ?? Infinity);
+    return scoreDifference || compareWithinScore(a, b) || a.contestant.localeCompare(b.contestant);
+  });
+
+  let index = 0;
+  let baseRank = 1;
+  const ranked = [];
+  while (index < rows.length) {
+    const score = scoreValue(rows[index]);
+    const group = [];
+    while (index < rows.length && scoreValue(rows[index]) === score) {
+      group.push(rows[index]);
+      index += 1;
+    }
+    group.forEach((row, groupIndex) => {
+      ranked.push({ ...row, rank: groupIndex === 0 ? baseRank : baseRank + 1 });
+    });
+    baseRank += group.length;
+  }
+  return ranked;
+}
+
 function buildPlayersByName(livePlayers) {
   return new Map(livePlayers.map((player) => [normalizeName(player.name), player]));
 }
@@ -204,29 +228,38 @@ export function buildB4RLeaderboard(picks, livePlayers, selectedRound, par = 71)
     };
   });
 
-  const compare = (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity) || compareScoreSequences(a.tieBreakScores, b.tieBreakScores);
-  return rankedRows(rows, compare);
+  return rankedScoreGroups(rows, (row) => row.total, (a, b) => compareScoreSequences(a.tieBreakScores, b.tieBreakScores));
 }
 
 export function buildBROWLeaderboard(picks, livePlayers, selectedRound, par = 71) {
   const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const bestByGolfer = team.golfers.flatMap((golfer) => {
-      const best = sortedRounds(golfer.rounds.filter((round) => round.score != null))[0];
-      return best ? [{ ...best, pickName: golfer.pickName }] : [];
+    const bestByGolfer = [];
+    const secondBestByGolfer = [];
+    team.golfers.forEach((golfer) => {
+      const rounds = sortedRounds(golfer.rounds.filter((round) => round.score != null));
+      if (rounds[0]) bestByGolfer.push({ ...rounds[0], pickName: golfer.pickName });
+      if (rounds[1]) secondBestByGolfer.push({ ...rounds[1], pickName: golfer.pickName });
     });
     const countingKeys = new Set(bestByGolfer.map((round) => round.key));
     const total = bestByGolfer.length ? bestByGolfer.reduce((sum, round) => sum + round.score, 0) : null;
+    const tieBreakTotal = secondBestByGolfer.length ? secondBestByGolfer.reduce((sum, round) => sum + round.score, 0) : null;
     return {
       ...team,
       golfers: markCountingRounds(team.golfers, countingKeys),
       countedRounds: sortedRounds(bestByGolfer),
+      tieBreakRounds: sortedRounds(secondBestByGolfer),
       countedRoundCount: bestByGolfer.length,
       total,
+      tieBreakTotal,
       toPar: total == null ? null : total - par * bestByGolfer.length
     };
   });
 
-  return rankedRows(rows, (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity), (a, b) => a.total === b.total);
+  return rankedRows(
+    rows,
+    (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity) || (a.tieBreakTotal ?? Infinity) - (b.tieBreakTotal ?? Infinity),
+    (a, b) => a.total === b.total && a.tieBreakTotal === b.tieBreakTotal
+  );
 }
 
 export function buildARTLeaderboard(picks, livePlayers, selectedRound, par = 71) {
@@ -246,7 +279,7 @@ export function buildARTLeaderboard(picks, livePlayers, selectedRound, par = 71)
     };
   });
 
-  return rankedRows(rows, (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity), (a, b) => a.total === b.total);
+  return rankedScoreGroups(rows, (row) => row.total);
 }
 
 export function buildAltBRODLeaderboard(picks, livePlayers, selectedRound, par = 71) {
@@ -268,7 +301,7 @@ export function buildAltBRODLeaderboard(picks, livePlayers, selectedRound, par =
     };
   });
 
-  return rankedRows(rows, (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity), (a, b) => a.total === b.total);
+  return rankedScoreGroups(rows, (row) => row.total);
 }
 
 function awardEligibleRounds(team) {
