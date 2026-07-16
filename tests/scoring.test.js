@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   buildARTLeaderboard,
-  buildAltBRODLeaderboard,
+  buildAltB4RLeaderboard,
   buildB4RLeaderboard,
   buildBROWLeaderboard,
   buildFlushLeaderboard,
@@ -13,15 +13,18 @@ import {
   roundPace
 } from "../public/scoring.js";
 
+const MAIN_COUNT = 10;
+const ALT_COUNT = 6;
+
 function pick(contestant, mainScores = {}, altScores = {}) {
   const row = { Contestant: contestant };
   const players = [];
-  for (let index = 1; index <= 8; index += 1) {
+  for (let index = 1; index <= MAIN_COUNT; index += 1) {
     const pickName = `${contestant} Main${index}, Player`;
     row[`Golfer ${index}`] = pickName;
     players.push(playerFromScores(pickName, mainScores[index] || []));
   }
-  for (let index = 1; index <= 4; index += 1) {
+  for (let index = 1; index <= ALT_COUNT; index += 1) {
     const pickName = `${contestant} Alt${index}, Player`;
     row[`Alt ${index}`] = pickName;
     players.push(playerFromScores(pickName, altScores[index] || []));
@@ -52,11 +55,12 @@ test("parses quoted golfer names from CSV", () => {
   assert.equal(rows[0]["Golfer 1"], "McIlroy, Rory");
 });
 
-test("normalizes Scottish Open team and alternate headers", () => {
-  const [row] = parsePicksCsv('Teams,Golfer 1,First Alt,Second Alt,Third Alt,Fourth Alt\r\n"Smith, Sam","Main, Max","Alt, One","Alt, Two","Alt, Three","Alt, Four"\r\n');
+test("normalizes O'Moroney team and alternate headers", () => {
+  const [row] = parsePicksCsv('Teams,Golfer 1,First,Second,Third,Fourth,Fifth,Sixth\r\n"Smith, Sam","Main, Max","Alt, One","Alt, Two","Alt, Three","Alt, Four","Alt, Five","Alt, Six"\r\n');
   assert.equal(row.Contestant, "Smith, Sam");
   assert.equal(row["Alt 1"], "Alt, One");
   assert.equal(row["Alt 4"], "Alt, Four");
+  assert.equal(row["Alt 6"], "Alt, Six");
 });
 
 test("uses current score to par as 18-hole pace", () => {
@@ -66,7 +70,7 @@ test("uses current score to par as 18-hole pace", () => {
   assert.deepEqual(roundPace({ strokes: null, toPar: 0, holes: 0, status: "not_started" }, 71), { score: null, state: "not_started" });
 });
 
-test("B4R takes the best four rounds from any of the eight main golfers", () => {
+test("B4R takes the best four rounds from any of the ten main golfers", () => {
   const a = pick("A", { 1: [68, 67, 66, 65], 2: [80], 3: [81], 4: [82], 5: [83], 6: [84], 7: [85], 8: [86] });
   const b = pick("B", { 1: [67], 2: [68], 3: [69], 4: [70], 5: [71], 6: [72], 7: [73], 8: [74] });
   const rows = buildB4RLeaderboard([a.row, b.row], [...a.players, ...b.players], 4, 71);
@@ -147,12 +151,14 @@ test("BROW sums each main golfer's best round of the week", () => {
     5: [71],
     6: [73],
     7: [67],
-    8: [76]
+    8: [76],
+    9: [66],
+    10: [77]
   });
   const [row] = buildBROWLeaderboard([team.row], team.players, 2, 71);
 
-  assert.equal(row.total, 566);
-  assert.equal(row.countedRoundCount, 8);
+  assert.equal(row.total, 709);
+  assert.equal(row.countedRoundCount, 10);
 });
 
 test("BROW ties use the cumulative second-best round total", () => {
@@ -164,7 +170,9 @@ test("BROW ties use the cumulative second-best round total", () => {
     5: [72, 74],
     6: [73, 75],
     7: [74, 76],
-    8: [75, 77]
+    8: [75, 77],
+    9: [76, 78],
+    10: [77, 79]
   });
   const b = pick("B", {
     1: [68, 71],
@@ -174,13 +182,15 @@ test("BROW ties use the cumulative second-best round total", () => {
     5: [72, 75],
     6: [73, 76],
     7: [74, 77],
-    8: [75, 78]
+    8: [75, 78],
+    9: [76, 78],
+    10: [77, 79]
   });
   const rows = buildBROWLeaderboard([b.row, a.row], [...b.players, ...a.players], 2, 71);
 
   assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.tieBreakTotal, row.rank]), [
-    ["A", 572, 588, 1],
-    ["B", 572, 596, 2]
+    ["A", 725, 745, 1],
+    ["B", 725, 753, 2]
   ]);
 });
 
@@ -208,39 +218,42 @@ test("BROW replaces withdrawn starters with the first alternate", () => {
   assert.equal(row.countedRounds.some((round) => round.pickName === "WD Main1, Player"), false);
 });
 
-test("ART sums all eight main golfers across rounds one and two", () => {
-  const team = pick("ART", Object.fromEntries(Array.from({ length: 8 }, (_, index) => [index + 1, [70 + index, 71 + index]])));
+test("ART sums all ten main golfers across rounds one and two", () => {
+  const team = pick("ART", Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, [70 + index, 71 + index]])));
   const [row] = buildARTLeaderboard([team.row], team.players, 4, 71);
 
-  assert.equal(row.countedRoundCount, 16);
+  assert.equal(row.countedRoundCount, 20);
   assert.equal(row.throughRound, 2);
-  assert.equal(row.total, 1184);
+  assert.equal(row.total, 1500);
 });
 
-test("Alt BROD takes the best alternate round each day", () => {
+test("Alt B4R takes the best four alternate rounds across the week", () => {
   const team = pick("ALT", {}, {
     1: [70, 75, 72],
     2: [69, 74, 71],
     3: [73, 68, 76],
-    4: [72, 73, 67]
+    4: [72, 73, 67],
+    5: [66, 80, 79],
+    6: [78, 77, 65]
   });
-  const [row] = buildAltBRODLeaderboard([team.row], team.players, 3, 71);
+  const [row] = buildAltB4RLeaderboard([team.row], team.players, 3, 71);
 
-  assert.equal(row.total, 204);
+  assert.equal(row.total, 266);
   assert.deepEqual(row.countedRounds.map((round) => [round.pickName, round.roundNumber, round.score]), [
-    ["ALT Alt2, Player", 1, 69],
-    ["ALT Alt3, Player", 2, 68],
-    ["ALT Alt4, Player", 3, 67]
+    ["ALT Alt6, Player", 3, 65],
+    ["ALT Alt5, Player", 1, 66],
+    ["ALT Alt4, Player", 3, 67],
+    ["ALT Alt3, Player", 2, 68]
   ]);
 });
 
-test("Alt BROD rank keeps score groups without breaking tied totals", () => {
-  const a = pick("A", {}, { 1: [68], 2: [80], 3: [81], 4: [82] });
-  const b = pick("B", {}, { 1: [68], 2: [79], 3: [81], 4: [82] });
-  const c = pick("C", {}, { 1: [70], 2: [80], 3: [81], 4: [82] });
-  const d = pick("D", {}, { 1: [70], 2: [79], 3: [81], 4: [82] });
-  const e = pick("E", {}, { 1: [72], 2: [80], 3: [81], 4: [82] });
-  const rows = buildAltBRODLeaderboard(
+test("Alt B4R rank keeps score groups while ordering ties by tiebreakers", () => {
+  const a = pick("A", {}, { 1: [68], 2: [69], 3: [70], 4: [71], 5: [72], 6: [80] });
+  const b = pick("B", {}, { 1: [68], 2: [69], 3: [70], 4: [71], 5: [73], 6: [74] });
+  const c = pick("C", {}, { 1: [69], 2: [70], 3: [71], 4: [72], 5: [73], 6: [74] });
+  const d = pick("D", {}, { 1: [69], 2: [70], 3: [71], 4: [72], 5: [74], 6: [75] });
+  const e = pick("E", {}, { 1: [70], 2: [71], 3: [72], 4: [73], 5: [74], 6: [75] });
+  const rows = buildAltB4RLeaderboard(
     [b.row, d.row, e.row, c.row, a.row],
     [...b.players, ...d.players, ...e.players, ...c.players, ...a.players],
     1,
@@ -248,11 +261,11 @@ test("Alt BROD rank keeps score groups without breaking tied totals", () => {
   );
 
   assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
-    ["A", 68, 1],
-    ["B", 68, 2],
-    ["C", 70, 3],
-    ["D", 70, 3],
-    ["E", 72, 5]
+    ["A", 278, 1],
+    ["B", 278, 2],
+    ["C", 282, 3],
+    ["D", 282, 3],
+    ["E", 286, 5]
   ]);
 });
 
@@ -287,12 +300,12 @@ test("missed-cut golfers remain visible but cannot count in weekend rounds", () 
   assert.equal(row.countedRounds.some((round) => round.key === "Golfer 1:cutmain1player:3"), false);
 });
 
-test("Scottish Open picks include 100 teams with 8 main golfers and 4 alternates", () => {
-  const rows = parsePicksCsv(readFileSync(new URL("../public/data/scottish-open-picks.csv", import.meta.url), "utf8"));
-  assert.equal(rows.length, 100);
-  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 100);
+test("O'Moroney picks include 45 teams with 10 main golfers and 6 alternates", () => {
+  const rows = parsePicksCsv(readFileSync(new URL("../public/data/omoroney-picks.csv", import.meta.url), "utf8"));
+  assert.equal(rows.length, 45);
+  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 45);
   for (const row of rows) {
-    assert.equal(new Set(Array.from({ length: 8 }, (_, index) => row[`Golfer ${index + 1}`])).size, 8);
-    assert.equal(new Set(Array.from({ length: 4 }, (_, index) => row[`Alt ${index + 1}`])).size, 4);
+    assert.equal(new Set(Array.from({ length: 10 }, (_, index) => row[`Golfer ${index + 1}`])).size, 10);
+    assert.equal(new Set(Array.from({ length: 6 }, (_, index) => row[`Alt ${index + 1}`])).size, 6);
   }
 });

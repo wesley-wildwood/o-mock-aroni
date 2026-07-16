@@ -1,7 +1,7 @@
-const EVENT_ID = process.env.ESPN_EVENT_ID || "401811955";
+const EVENT_ID = process.env.ESPN_EVENT_ID || "401811957";
 const ESPN_URL = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?event=${EVENT_ID}`;
 const EVENT_PAR = Number.parseInt(process.env.EVENT_PAR || "70", 10);
-const EVENT_VENUE = process.env.EVENT_VENUE || "The Renaissance Club";
+const EVENT_VENUE = process.env.EVENT_VENUE || "Royal Birkdale";
 
 function parseToPar(value) {
   if (value === "E" || value === "-" || value == null) return 0;

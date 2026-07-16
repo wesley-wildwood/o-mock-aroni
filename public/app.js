@@ -1,6 +1,6 @@
 import {
   buildARTLeaderboard,
-  buildAltBRODLeaderboard,
+  buildAltB4RLeaderboard,
   buildB4RLeaderboard,
   buildBROWLeaderboard,
   buildFlushLeaderboard,
@@ -15,7 +15,7 @@ const GAME_CONFIG = {
     kicker: "Best four rounds",
     totalHeader: "Best 4 total",
     roundHeader: "Rounds counted",
-    golferHeader: "8 main golfers",
+    golferHeader: "10 main golfers",
     build: buildB4RLeaderboard
   },
   brow: {
@@ -23,7 +23,7 @@ const GAME_CONFIG = {
     kicker: "Best round of week",
     totalHeader: "BROW total",
     roundHeader: "Golfers counted",
-    golferHeader: "8 main golfers",
+    golferHeader: "10 main golfers",
     build: buildBROWLeaderboard
   },
   art: {
@@ -31,16 +31,16 @@ const GAME_CONFIG = {
     kicker: "After Round Two",
     totalHeader: "ART total",
     roundHeader: "Rounds counted",
-    golferHeader: "8 main golfers",
+    golferHeader: "10 main golfers",
     build: buildARTLeaderboard
   },
-  altbrod: {
-    label: "Alt BROD",
-    kicker: "Alternate best round of day",
-    totalHeader: "Alt BROD total",
-    roundHeader: "Daily bests",
-    golferHeader: "4 alternates",
-    build: buildAltBRODLeaderboard
+  altb4r: {
+    label: "Alt B4R",
+    kicker: "Alternate best four rounds",
+    totalHeader: "Alt B4R total",
+    roundHeader: "Next best",
+    golferHeader: "6 alternates",
+    build: buildAltB4RLeaderboard
   },
   straight: {
     label: "Straight",
@@ -144,7 +144,7 @@ function renderSummary(rows) {
       <article class="summary-feature"><span>Current leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.runScores?.join("–") || "No string yet"}</small></article>
       <article><span>Longest string</span><strong>${leader?.length ?? "—"}</strong><small>Consecutive scores</small></article>
       <article><span>Starting score</span><strong>${Number.isFinite(leader?.startScore) ? leader.startScore : "—"}</strong><small>Current tie-break</small></article>
-      <article><span>Eligible rounds</span><strong>${state.selectedRound * 8}</strong><small>8 main golfers through R${state.selectedRound}</small></article>`;
+      <article><span>Eligible rounds</span><strong>${state.selectedRound * 10}</strong><small>10 main golfers through R${state.selectedRound}</small></article>`;
     return;
   }
 
@@ -154,7 +154,7 @@ function renderSummary(rows) {
       <article class="summary-feature"><span>Current leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.flushScore == null ? "No flush yet" : `${leader.flushCount} × ${leader.flushScore}`}</small></article>
       <article><span>Largest flush</span><strong>${leader?.flushCount ?? "—"}</strong><small>Matching scores</small></article>
       <article><span>Next flush group</span><strong>${nextGroup}</strong><small>Current tie-break</small></article>
-      <article><span>Eligible rounds</span><strong>${state.selectedRound * 8}</strong><small>8 main golfers through R${state.selectedRound}</small></article>`;
+      <article><span>Eligible rounds</span><strong>${state.selectedRound * 10}</strong><small>10 main golfers through R${state.selectedRound}</small></article>`;
     return;
   }
 
@@ -182,9 +182,13 @@ function rowSubtitle(row) {
     const tiebreak = row.tieBreakRound ? `Next: R${row.tieBreakRound.roundNumber} ${row.tieBreakRound.pickName} ${row.tieBreakRound.score}` : "Next: waiting";
     return `Best: ${best} · ${tiebreak}`;
   }
-  if (state.selectedGame === "brow") return `${row.countedRoundCount}/8 golfers have a best round · BROW2 ${row.tieBreakTotal ?? "waiting"}`;
-  if (state.selectedGame === "art") return `Rounds 1-${row.throughRound} across 8 golfers`;
-  if (state.selectedGame === "altbrod") return row.countedRounds.map((round) => `R${round.roundNumber} ${round.pickName} ${round.score}`).join(" · ") || "Waiting";
+  if (state.selectedGame === "brow") return `${row.countedRoundCount}/10 golfers have a best round · BROW2 ${row.tieBreakTotal ?? "waiting"}`;
+  if (state.selectedGame === "art") return `Rounds 1-${row.throughRound} across 10 golfers`;
+  if (state.selectedGame === "altb4r") {
+    const best = row.countedRounds.map((round) => `R${round.roundNumber} ${round.pickName} ${round.score}`).join(" · ") || "Waiting";
+    const tiebreak = row.tieBreakRound ? `Next: R${row.tieBreakRound.roundNumber} ${row.tieBreakRound.pickName} ${row.tieBreakRound.score}` : "Next: waiting";
+    return `Best: ${best} · ${tiebreak}`;
+  }
   if (state.selectedGame === "straight") return row.runScores?.length ? row.runScores.join("–") : "No string yet";
   if (state.selectedGame === "flush") return row.flushScore == null ? "No flush yet" : `${row.flushCount} rounds of ${row.flushScore}`;
   return "";
@@ -224,7 +228,7 @@ function renderRows(rows) {
     <div class="contestant"><strong>${escapeHtml(row.contestant)}</strong><span>${escapeHtml(rowSubtitle(row))}</span></div>
     <div class="total"><strong>${primaryValue(row)}</strong><span>${primaryMeta(row)}</span></div>
     <div class="round-score"><strong>${secondaryValue(row)}</strong><span>${secondaryMeta()}</span></div>
-    <div class="golfers pool-golfers ${state.selectedGame === "altbrod" ? "alt-pool" : ""}">${row.golfers.map(golferCard).join("")}</div>
+    <div class="golfers pool-golfers ${state.selectedGame === "altb4r" ? "alt-pool" : ""}">${row.golfers.map(golferCard).join("")}</div>
   </article>`).join("");
 }
 
@@ -275,8 +279,8 @@ async function refreshScores({ initial = false } = {}) {
 }
 
 async function init() {
-  const response = await fetch("/data/scottish-open-picks.csv");
-  if (!response.ok) throw new Error("The Scottish Open picks file could not be loaded");
+  const response = await fetch("/data/omoroney-picks.csv");
+  if (!response.ok) throw new Error("The O'Moroney picks file could not be loaded");
   state.picks = parsePicksCsv(await response.text());
   await refreshScores({ initial: true });
   window.setInterval(refreshScores, 60_000);

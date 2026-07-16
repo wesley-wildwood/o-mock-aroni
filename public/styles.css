@@ -48,7 +48,7 @@ button, input { font: inherit; }
 .game-tabs button.active { background: var(--forest); color: white; box-shadow: 0 2px 8px rgba(13,47,39,.18); }
 .game-tabs button[data-game="brow"].active { background: var(--rust); }
 .game-tabs button[data-game="art"].active { background: #476f85; }
-.game-tabs button[data-game="altbrod"].active { background: #2f6d74; }
+.game-tabs button[data-game="altb4r"].active { background: #2f6d74; }
 .game-tabs button[data-game="straight"].active { background: #74602b; }
 .game-tabs button[data-game="flush"].active { background: #654673; }
 .round-tabs { display: flex; gap: 5px; padding: 4px; background: #e9ece5; border-radius: 5px; }
@@ -76,9 +76,9 @@ body[data-game="brow"] .top-1 .rank span { background: #f0b49e; }
 body[data-game="art"] .leaderboard-head .section-kicker { color: #476f85; }
 body[data-game="art"] .leader-row.top { border-left-color: #6d9db5; }
 body[data-game="art"] .top-1 .rank span { background: #c4dce7; }
-body[data-game="altbrod"] .leaderboard-head .section-kicker { color: #2f6d74; }
-body[data-game="altbrod"] .leader-row.top { border-left-color: #70a8ad; }
-body[data-game="altbrod"] .top-1 .rank span { background: #b8dadd; }
+body[data-game="altb4r"] .leaderboard-head .section-kicker { color: #2f6d74; }
+body[data-game="altb4r"] .leader-row.top { border-left-color: #70a8ad; }
+body[data-game="altb4r"] .top-1 .rank span { background: #b8dadd; }
 body[data-game="straight"] .leaderboard-head .section-kicker { color: #8a742f; }
 body[data-game="straight"] .leader-row.top { border-left-color: #c7aa50; }
 body[data-game="straight"] .top-1 .rank span { background: #e0ca83; }
@@ -121,8 +121,8 @@ body[data-game="flush"] .top-1 .rank span { background: #d8c0df; }
 .golfer-metric.tournament strong { color: var(--rust); font-size: 15px; }
 .golfer-progress { justify-self: end; color: var(--muted); font-size: 7px; text-transform: uppercase; white-space: nowrap; }
 .pool-row { min-height: 178px; }
-.pool-row .golfers { grid-template-columns: repeat(4, minmax(175px, 1fr)); grid-auto-rows: 1fr; }
-.pool-row .golfers.alt-pool { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
+.pool-row .golfers { grid-template-columns: repeat(5, minmax(160px, 1fr)); grid-auto-rows: 1fr; }
+.pool-row .golfers.alt-pool { grid-template-columns: repeat(3, minmax(215px, 1fr)); }
 .pool-golfer { min-width: 0; overflow: hidden; padding: 9px 10px; border-left: 1px solid #e8ebe7; border-top: 1px solid #f0f2ef; background: #fcfcfa; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
 .pool-golfer.inactive { background: #f1f1ee; }
 .pool-golfer.inactive .golfer-name { color: #89928e; text-decoration: line-through; text-decoration-thickness: 1px; }
@@ -139,7 +139,7 @@ body[data-game="flush"] .top-1 .rank span { background: #d8c0df; }
 .round-chip.tiebreak { border-color: #d7b35c; background: #fbf4df; box-shadow: inset 0 -2px #d7b35c; }
 body[data-game="brow"] .round-chip.counting { border-color: #e2a184; background: #f8e9e2; box-shadow: inset 0 -2px var(--rust); }
 body[data-game="art"] .round-chip.counting { border-color: #91b7ca; background: #e7f1f5; box-shadow: inset 0 -2px #6d9db5; }
-body[data-game="altbrod"] .round-chip.counting { border-color: #70a8ad; background: #e5f2f3; box-shadow: inset 0 -2px #70a8ad; }
+body[data-game="altb4r"] .round-chip.counting { border-color: #70a8ad; background: #e5f2f3; box-shadow: inset 0 -2px #70a8ad; }
 body[data-game="flush"] .round-chip.counting { border-color: #9d76aa; background: #f0e8f2; box-shadow: inset 0 -2px #9d76aa; }
 .round-chip.inactive { opacity: .55; border-color: #d5d8d6; background: #e8e8e5; box-shadow: none; }
 body.hide-round-count .column-labels,
@@ -147,16 +147,16 @@ body.hide-round-count .leader-row { grid-template-columns: 46px minmax(265px, .8
 body.hide-round-count .column-labels span:nth-child(4),
 body.hide-round-count .leader-row .round-score { display: none; }
 body.hide-round-count .pool-row { min-height: 190px; }
-body[data-game="altbrod"] .column-labels,
-body[data-game="altbrod"] .leader-row { grid-template-columns: 46px minmax(270px, .85fr) 110px 100px minmax(820px, 3.4fr); }
-body[data-game="altbrod"] .pool-row { min-height: 142px; }
-body[data-game="altbrod"] .pool-row .golfers.alt-pool { grid-template-columns: repeat(4, minmax(185px, 1fr)); }
-body[data-game="altbrod"] .pool-golfer { padding: 13px 14px; }
-body[data-game="altbrod"] .golfer-name { font-size: 11px; }
-body[data-game="altbrod"] .alt-total { font-size: 9px; }
-body[data-game="altbrod"] .round-chip strong { font-size: 18px; }
-body[data-game="altbrod"] .round-chip span { font-size: 8px; }
-body[data-game="altbrod"] .round-chip small { font-size: 6px; }
+body[data-game="altb4r"] .column-labels,
+body[data-game="altb4r"] .leader-row { grid-template-columns: 46px minmax(270px, .85fr) 110px 100px minmax(820px, 3.4fr); }
+body[data-game="altb4r"] .pool-row { min-height: 170px; }
+body[data-game="altb4r"] .pool-row .golfers.alt-pool { grid-template-columns: repeat(3, minmax(215px, 1fr)); }
+body[data-game="altb4r"] .pool-golfer { padding: 12px 14px; }
+body[data-game="altb4r"] .golfer-name { font-size: 11px; }
+body[data-game="altb4r"] .alt-total { font-size: 9px; }
+body[data-game="altb4r"] .round-chip strong { font-size: 18px; }
+body[data-game="altb4r"] .round-chip span { font-size: 8px; }
+body[data-game="altb4r"] .round-chip small { font-size: 6px; }
 .alt-row { min-height: 86px; }
 .alt-row .golfers { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
 .alt-golfer { min-width: 0; padding: 8px 10px; border-left: 1px solid #e8ebe7; background: #fcfcfa; }
@@ -212,8 +212,8 @@ body[data-game="flush"] .award-row .golfer.counting { background: #f0e8f2; box-s
   .total strong, .round-score strong { font-size: 24px; }
   .total span, .round-score span { display: block; margin: 2px 0 0; }
   .golfers { overflow-x: auto; grid-template-columns: repeat(5, 145px); }
-  .pool-row .golfers { grid-template-columns: repeat(4, 190px); }
-  .pool-row .golfers.alt-pool { grid-template-columns: repeat(4, 170px); }
+  .pool-row .golfers { grid-template-columns: repeat(5, 170px); }
+  .pool-row .golfers.alt-pool { grid-template-columns: repeat(3, 190px); }
   .alt-row .golfers { grid-template-columns: repeat(3, 210px); }
   .award-row .golfers { grid-template-columns: repeat(5, 145px); }
   .footer { display: block; line-height: 1.8; }

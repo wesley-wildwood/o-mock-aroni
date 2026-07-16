@@ -44,7 +44,9 @@ export function parsePicksCsv(text) {
   }
 
   const headers = rows.shift();
-  return rows.map((values) => normalizePickRow(Object.fromEntries(headers.map((header, i) => [header, values[i] || ""]))));
+  return rows
+    .map((values) => normalizePickRow(Object.fromEntries(headers.map((header, i) => [header, values[i] || ""]))))
+    .filter((row) => row.Contestant && Object.entries(row).some(([key, value]) => /^Golfer \d+$/.test(key) && value));
 }
 
 function normalizePickRow(row) {
@@ -54,7 +56,9 @@ function normalizePickRow(row) {
     "Alt 1": row["Alt 1"] || row["First Alt"] || row.First || "",
     "Alt 2": row["Alt 2"] || row["Second Alt"] || row.Second || "",
     "Alt 3": row["Alt 3"] || row["Third Alt"] || row.Third || "",
-    "Alt 4": row["Alt 4"] || row["Fourth Alt"] || row.Fourth || ""
+    "Alt 4": row["Alt 4"] || row["Fourth Alt"] || row.Fourth || "",
+    "Alt 5": row["Alt 5"] || row["Fifth Alt"] || row.Fifth || "",
+    "Alt 6": row["Alt 6"] || row["Sixth Alt"] || row.Sixth || ""
   };
 }
 
@@ -208,8 +212,8 @@ function buildPoolRows(picks, livePlayers, throughRound, par, columns, options) 
   }));
 }
 
-export const MAIN_GOLFER_COLUMNS = Array.from({ length: 8 }, (_, index) => `Golfer ${index + 1}`);
-export const ALT_GOLFER_COLUMNS = Array.from({ length: 4 }, (_, index) => `Alt ${index + 1}`);
+export const MAIN_GOLFER_COLUMNS = Array.from({ length: 10 }, (_, index) => `Golfer ${index + 1}`);
+export const ALT_GOLFER_COLUMNS = Array.from({ length: 6 }, (_, index) => `Alt ${index + 1}`);
 
 export function buildB4RLeaderboard(picks, livePlayers, selectedRound, par = 71) {
   const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
@@ -286,26 +290,28 @@ export function buildARTLeaderboard(picks, livePlayers, selectedRound, par = 71)
   return rankedScoreGroups(rows, (row) => row.total);
 }
 
-export function buildAltBRODLeaderboard(picks, livePlayers, selectedRound, par = 71) {
+export function buildAltB4RLeaderboard(picks, livePlayers, selectedRound, par = 71) {
   const rows = buildPoolRows(picks, livePlayers, selectedRound, par, ALT_GOLFER_COLUMNS).map((team) => {
-    const dailyBests = [];
-    for (let roundNumber = 1; roundNumber <= selectedRound; roundNumber += 1) {
-      const dailyRounds = sortedRounds(allRounds(team.golfers).filter((round) => round.roundNumber === roundNumber));
-      if (dailyRounds[0]) dailyBests.push(dailyRounds[0]);
-    }
-    const countingKeys = new Set(dailyBests.map((round) => round.key));
-    const total = dailyBests.length ? dailyBests.reduce((sum, round) => sum + round.score, 0) : null;
+    const postedRounds = sortedRounds(allRounds(team.golfers));
+    const countedRounds = postedRounds.slice(0, 4);
+    const tieBreakRounds = postedRounds.slice(4);
+    const tieBreakRound = tieBreakRounds[0] || null;
+    const countingKeys = new Set(countedRounds.map((round) => round.key));
+    const tieBreakKeys = new Set(tieBreakRound ? [tieBreakRound.key] : []);
+    const total = countedRounds.length ? countedRounds.reduce((sum, round) => sum + round.score, 0) : null;
     return {
       ...team,
-      golfers: markCountingRounds(team.golfers, countingKeys),
-      countedRounds: dailyBests,
-      countedRoundCount: dailyBests.length,
+      golfers: markCountingRounds(team.golfers, countingKeys, tieBreakKeys),
+      countedRounds,
+      countedRoundCount: countedRounds.length,
+      tieBreakRound,
+      tieBreakScores: tieBreakRounds.map((round) => round.score),
       total,
-      toPar: total == null ? null : total - par * dailyBests.length
+      toPar: total == null ? null : total - par * countedRounds.length
     };
   });
 
-  return rankedScoreGroups(rows, (row) => row.total);
+  return rankedScoreGroups(rows, (row) => row.total, (a, b) => compareScoreSequences(a.tieBreakScores, b.tieBreakScores));
 }
 
 function awardEligibleRounds(team) {
