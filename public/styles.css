@@ -46,11 +46,14 @@ button, input { font: inherit; }
 .game-tabs { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); background: white; border-radius: 5px; }
 .game-tabs button { border: 0; background: transparent; color: var(--muted); padding: 9px 15px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: 700; transition: .2s; }
 .game-tabs button.active { background: var(--forest); color: white; box-shadow: 0 2px 8px rgba(13,47,39,.18); }
+.game-tabs button[data-game="overview"].active { background: #23517f; }
 .game-tabs button[data-game="brow"].active { background: var(--rust); }
 .game-tabs button[data-game="art"].active { background: #476f85; }
 .game-tabs button[data-game="altb4r"].active { background: #2f6d74; }
 .game-tabs button[data-game="straight"].active { background: #74602b; }
 .game-tabs button[data-game="flush"].active { background: #654673; }
+.game-tabs button[data-game="mtmc"].active { background: #2d6a46; }
+.game-tabs button[data-game="spread"].active { background: #8c4b2f; }
 .round-tabs { display: flex; gap: 5px; padding: 4px; background: #e9ece5; border-radius: 5px; }
 .round-tabs button { border: 0; background: transparent; color: var(--muted); padding: 10px 18px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 600; transition: .2s; }
 .round-tabs button.active { background: var(--forest); color: white; box-shadow: 0 2px 8px rgba(13,47,39,.18); }
@@ -70,6 +73,7 @@ button, input { font: inherit; }
 
 .leaderboard-head { display: flex; align-items: end; justify-content: space-between; margin-bottom: 14px; }
 .leaderboard-head .section-kicker { color: var(--rust); margin-bottom: 8px; }
+body[data-game="overview"] .leaderboard-head .section-kicker { color: #23517f; }
 body[data-game="brow"] .leaderboard-head .section-kicker { color: var(--rust); }
 body[data-game="brow"] .leader-row.top { border-left-color: var(--rust); }
 body[data-game="brow"] .top-1 .rank span { background: #f0b49e; }
@@ -85,6 +89,12 @@ body[data-game="straight"] .top-1 .rank span { background: #e0ca83; }
 body[data-game="flush"] .leaderboard-head .section-kicker { color: #765184; }
 body[data-game="flush"] .leader-row.top { border-left-color: #9d76aa; }
 body[data-game="flush"] .top-1 .rank span { background: #d8c0df; }
+body[data-game="mtmc"] .leaderboard-head .section-kicker { color: #2d6a46; }
+body[data-game="mtmc"] .leader-row.top { border-left-color: #6ea97f; }
+body[data-game="mtmc"] .top-1 .rank span { background: #b9d8bf; }
+body[data-game="spread"] .leaderboard-head .section-kicker { color: #8c4b2f; }
+body[data-game="spread"] .leader-row.top { border-left-color: #c78662; }
+body[data-game="spread"] .top-1 .rank span { background: #e7c2ac; }
 .leaderboard-head h2 { font-family: var(--serif); font-size: 32px; font-weight: 400; margin: 0; }
 .updated { color: var(--muted); font-size: 11px; }
 .column-labels, .leader-row { display: grid; grid-template-columns: 46px minmax(240px, .8fr) 92px 92px minmax(900px, 3.6fr); align-items: center; }
@@ -141,6 +151,8 @@ body[data-game="brow"] .round-chip.counting { border-color: #e2a184; background:
 body[data-game="art"] .round-chip.counting { border-color: #91b7ca; background: #e7f1f5; box-shadow: inset 0 -2px #6d9db5; }
 body[data-game="altb4r"] .round-chip.counting { border-color: #70a8ad; background: #e5f2f3; box-shadow: inset 0 -2px #70a8ad; }
 body[data-game="flush"] .round-chip.counting { border-color: #9d76aa; background: #f0e8f2; box-shadow: inset 0 -2px #9d76aa; }
+body[data-game="mtmc"] .round-chip.counting { border-color: #6ea97f; background: #e4f1e7; box-shadow: inset 0 -2px #6ea97f; }
+body[data-game="spread"] .round-chip.counting { border-color: #c78662; background: #f5e9e1; box-shadow: inset 0 -2px #c78662; }
 .round-chip.inactive { opacity: .55; border-color: #d5d8d6; background: #e8e8e5; box-shadow: none; }
 body.hide-round-count .column-labels,
 body.hide-round-count .leader-row { grid-template-columns: 46px minmax(265px, .85fr) 100px minmax(1040px, 4fr); }
@@ -157,6 +169,19 @@ body[data-game="altb4r"] .alt-total { font-size: 9px; }
 body[data-game="altb4r"] .round-chip strong { font-size: 18px; }
 body[data-game="altb4r"] .round-chip span { font-size: 8px; }
 body[data-game="altb4r"] .round-chip small { font-size: 6px; }
+.overview-view .column-labels { display: none; }
+.overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+.overview-card { border: 1px solid #0b233d; background: #0b78bd; color: white; box-shadow: 0 8px 22px rgba(20,51,44,.08); }
+.overview-card header { background: #244f82; border-bottom: 2px solid #04111f; text-align: center; font-weight: 800; letter-spacing: .03em; padding: 9px 12px; }
+.overview-card table { width: 100%; border-collapse: collapse; }
+.overview-card th { background: #244f82; border-bottom: 2px solid #04111f; color: white; font-size: 12px; text-align: left; padding: 7px 10px; }
+.overview-card td { padding: 4px 10px; font-size: 12px; font-weight: 700; line-height: 1.25; }
+.overview-card th:first-child,
+.overview-card td:first-child { width: 46px; text-align: center; }
+.overview-card th:nth-child(3),
+.overview-card td:nth-child(3),
+.overview-card th:nth-child(4),
+.overview-card td:nth-child(4) { width: 72px; text-align: center; }
 .alt-row { min-height: 86px; }
 .alt-row .golfers { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
 .alt-golfer { min-width: 0; padding: 8px 10px; border-left: 1px solid #e8ebe7; background: #fcfcfa; }
@@ -216,5 +241,7 @@ body[data-game="flush"] .award-row .golfer.counting { background: #f0e8f2; box-s
   .pool-row .golfers.alt-pool { grid-template-columns: repeat(3, 190px); }
   .alt-row .golfers { grid-template-columns: repeat(3, 210px); }
   .award-row .golfers { grid-template-columns: repeat(5, 145px); }
+  .overview-grid { grid-template-columns: 1fr; gap: 14px; }
+  .overview-card td, .overview-card th { font-size: 11px; padding: 5px 7px; }
   .footer { display: block; line-height: 1.8; }
 }

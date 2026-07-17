@@ -42,12 +42,15 @@
       <section class="controls" aria-label="Leaderboard controls">
         <div class="control-groups">
           <div class="game-tabs" id="gameTabs" aria-label="Game view">
+            <button data-game="overview" aria-pressed="false">Overview</button>
             <button class="active" data-game="b4r" aria-pressed="true">B4R</button>
             <button data-game="brow" aria-pressed="false">BROW</button>
             <button data-game="art" aria-pressed="false">ART</button>
             <button data-game="altb4r" aria-pressed="false">Alt B4R</button>
             <button data-game="straight" aria-pressed="false">Straight</button>
             <button data-game="flush" aria-pressed="false">Flush</button>
+            <button data-game="mtmc" aria-pressed="false">MTMC</button>
+            <button data-game="spread" aria-pressed="false">Spread</button>
           </div>
           <div class="round-tabs" id="roundTabs">
             <button data-round="1">Round 1</button>
@@ -58,7 +61,7 @@
         </div>
         <label class="search">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-          <input id="searchInput" type="search" placeholder="Find a team or golfer" />
+          <input id="searchInput" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Find a team or golfer" />
         </label>
       </section>
 

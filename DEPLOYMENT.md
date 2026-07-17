@@ -78,12 +78,15 @@ To redeploy manually:
 2. Confirm the header says **O'Moroney 2026**.
 3. Confirm the course card says **Royal Birkdale** and **Par 70**.
 4. Confirm the tabs work:
+   - `Overview`
    - `B4R`
    - `BROW`
    - `ART`
    - `Alt B4R`
    - `Straight`
    - `Flush`
+   - `MTMC`
+   - `Spread`
 5. Open:
 
 ```text

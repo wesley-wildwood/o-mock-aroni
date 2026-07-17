@@ -314,6 +314,57 @@ export function buildAltB4RLeaderboard(picks, livePlayers, selectedRound, par = 
   return rankedScoreGroups(rows, (row) => row.total, (a, b) => compareScoreSequences(a.tieBreakScores, b.tieBreakScores));
 }
 
+function openingRoundsComplete(golfer) {
+  return [1, 2].every((roundNumber) => golfer.rounds.find((round) => round.roundNumber === roundNumber)?.score != null);
+}
+
+function madeCut(golfer) {
+  if (!golfer.player || golfer.player.status === "missed_cut" || golfer.player.status === "withdrawn") return false;
+  return openingRoundsComplete(golfer);
+}
+
+export function buildMTMCLeaderboard(picks, livePlayers, selectedRound, par = 71) {
+  const throughRound = Math.max(2, selectedRound);
+  const rows = buildPoolRows(picks, livePlayers, throughRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
+    const madeCutGolfers = team.golfers.filter(madeCut);
+    const countingKeys = new Set(madeCutGolfers.flatMap((golfer) => golfer.rounds.filter((round) => round.roundNumber <= 2).map((round) => round.key)));
+    const total = madeCutGolfers.length;
+    return {
+      ...team,
+      golfers: markCountingRounds(team.golfers, countingKeys),
+      countedRounds: madeCutGolfers.flatMap((golfer) => golfer.rounds.filter((round) => round.roundNumber <= 2 && round.score != null)),
+      countedRoundCount: total,
+      total,
+      toPar: null
+    };
+  });
+
+  return rankedRows(rows, (a, b) => b.total - a.total);
+}
+
+export function buildSpreadLeaderboard(picks, livePlayers, selectedRound, par = 71) {
+  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
+    const rounds = sortedRounds(allRounds(team.golfers));
+    const bestRound = rounds[0] || null;
+    const worstRound = rounds.length ? rounds[rounds.length - 1] : null;
+    const spreadRounds = [bestRound, worstRound].filter(Boolean);
+    const countingKeys = new Set(spreadRounds.map((round) => round.key));
+    const total = bestRound && worstRound ? worstRound.score - bestRound.score : null;
+    return {
+      ...team,
+      golfers: markCountingRounds(team.golfers, countingKeys),
+      countedRounds: spreadRounds,
+      countedRoundCount: rounds.length,
+      bestRound,
+      worstRound,
+      total,
+      toPar: null
+    };
+  });
+
+  return rankedRows(rows, (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity));
+}
+
 function awardEligibleRounds(team) {
   return allRounds(team.golfers, { includeNotStarted: false });
 }

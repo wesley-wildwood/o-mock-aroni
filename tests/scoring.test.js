@@ -7,6 +7,8 @@ import {
   buildB4RLeaderboard,
   buildBROWLeaderboard,
   buildFlushLeaderboard,
+  buildMTMCLeaderboard,
+  buildSpreadLeaderboard,
   buildStraightLeaderboard,
   normalizeName,
   parsePicksCsv,
@@ -286,6 +288,40 @@ test("Flush uses main golfer rounds and favors lower equal-size groups", () => {
   assert.equal(rows[0].contestant, "Lower");
   assert.equal(rows[0].flushCount, 3);
   assert.equal(rows[0].flushScore, 69);
+});
+
+test("MTMC ranks teams by most main golfers making the cut with shared ranks", () => {
+  const ten = pick("Ten", Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, [70, 71]])));
+  const nine = pick("Nine", Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, [70, 71]])));
+  const alsoNine = pick("Also Nine", Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, [70, 71]])));
+  nine.players.find((player) => player.name === "Player Nine Main10").status = "missed_cut";
+  alsoNine.players.find((player) => player.name === "Player Also Nine Main9").status = "missed_cut";
+
+  const rows = buildMTMCLeaderboard(
+    [nine.row, alsoNine.row, ten.row],
+    [...nine.players, ...alsoNine.players, ...ten.players],
+    3,
+    71
+  );
+
+  assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
+    ["Ten", 10, 1],
+    ["Also Nine", 9, 2],
+    ["Nine", 9, 2]
+  ]);
+});
+
+test("Spread ranks teams by lowest difference between best and worst main-golfer rounds", () => {
+  const tight = pick("Tight", { 1: [68], 2: [69], 3: [70], 4: [71], 5: [72], 6: [73], 7: [74], 8: [75], 9: [76], 10: [77] });
+  const wide = pick("Wide", { 1: [65], 2: [69], 3: [70], 4: [71], 5: [72], 6: [73], 7: [74], 8: [75], 9: [76], 10: [80] });
+  const rows = buildSpreadLeaderboard([wide.row, tight.row], [...wide.players, ...tight.players], 1, 71);
+
+  assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
+    ["Tight", 9, 1],
+    ["Wide", 15, 2]
+  ]);
+  assert.equal(rows[0].bestRound.score, 68);
+  assert.equal(rows[0].worstRound.score, 77);
 });
 
 test("missed-cut golfers remain visible but cannot count in weekend rounds", () => {

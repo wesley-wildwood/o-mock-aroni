@@ -2,7 +2,7 @@
 
 A live fantasy leaderboard for the 2026 O'Moroney at The Open Championship, built from the supplied team sheet of 10 main golfers and 6 alternates per team.
 
-The default game is **B4R**: the lowest four rounds from any of a team's ten main golfers across the week. The app also includes **BROW**, **ART**, **Alt B4R**, **Straight**, and **Flush** views.
+The default game is **B4R**: the lowest four rounds from any of a team's ten main golfers across the week. The app also includes an **Overview** page plus **BROW**, **ART**, **Alt B4R**, **Straight**, **Flush**, **MTMC**, and **Spread** views.
 
 ## Run Locally
 
@@ -16,12 +16,15 @@ Open `http://localhost:3000`. The local server proxies live scoring through `/ap
 
 ## Scoring
 
+- **Overview:** top 15 teams from each game/subgame, with rank, team, total, and status only.
 - **B4R:** best four rounds from any of the team's 10 main golfers across all four rounds. A single golfer can contribute multiple counting rounds. Ties compare the next best unused round, then the next, until broken.
 - **BROW:** best round for each of the 10 main golfers, for a 10-round total. Ties use the cumulative total of each golfer's next-best round.
 - **ART:** total score of all 10 main golfers across Rounds 1 and 2.
 - **Alt B4R:** best four rounds from any of the team's 6 alternates. Ties compare the next best unused alternate round, then the next, until broken.
 - **Straight:** longest consecutive score string among the 10 main golfers' posted rounds through the selected day. Ties are broken by the lowest starting score.
 - **Flush:** largest group of identical scores among the 10 main golfers' posted rounds through the selected day. Equal-size groups are broken by the lower score, then the next group.
+- **MTMC:** Most to Make Cut. Teams rank by the number of main golfers who make the cut after Round 2. There are no tiebreakers.
+- **Spread:** difference between each team's best and worst posted round among its 10 main golfers. Lowest spread wins. There are no tiebreakers.
 
 ## Withdrawal Replacement
 

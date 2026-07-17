@@ -4,12 +4,22 @@ import {
   buildB4RLeaderboard,
   buildBROWLeaderboard,
   buildFlushLeaderboard,
+  buildMTMCLeaderboard,
+  buildSpreadLeaderboard,
   buildStraightLeaderboard,
   formatToPar,
   parsePicksCsv
 } from "./scoring.js";
 
 const GAME_CONFIG = {
+  overview: {
+    label: "Overview",
+    kicker: "Top 15 across games",
+    totalHeader: "Total",
+    roundHeader: "Status",
+    golferHeader: "Top 15",
+    overview: true
+  },
   b4r: {
     label: "B4R",
     kicker: "Best four rounds",
@@ -59,6 +69,22 @@ const GAME_CONFIG = {
     golferHeader: "Main golfer rounds",
     build: buildFlushLeaderboard,
     award: true
+  },
+  mtmc: {
+    label: "MTMC",
+    kicker: "Most to make cut",
+    totalHeader: "Made cut",
+    roundHeader: "Status",
+    golferHeader: "10 main golfers",
+    build: buildMTMCLeaderboard
+  },
+  spread: {
+    label: "Spread",
+    kicker: "Best-to-worst range",
+    totalHeader: "Spread",
+    roundHeader: "Rounds used",
+    golferHeader: "10 main golfers",
+    build: buildSpreadLeaderboard
   }
 };
 
@@ -139,6 +165,16 @@ function renderSummary(rows) {
   const completed = state.live.players.filter((player) => player.rounds?.[state.selectedRound]?.status === "complete").length;
   const fieldSize = rows.length;
 
+  if (state.selectedGame === "overview") {
+    const games = overviewGameEntries();
+    elements.summary.innerHTML = `
+      <article class="summary-feature"><span>Overview</span><strong>${games.length}</strong><small>Games and subgames</small></article>
+      <article><span>Top slots</span><strong>15</strong><small>Per board</small></article>
+      <article><span>On the course</span><strong>${onCourse}</strong><small>${completed} finished today</small></article>
+      <article><span>Field</span><strong>${state.picks.length}</strong><small>Teams</small></article>`;
+    return;
+  }
+
   if (state.selectedGame === "straight") {
     elements.summary.innerHTML = `
       <article class="summary-feature"><span>Current leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.runScores?.join("–") || "No string yet"}</small></article>
@@ -158,6 +194,24 @@ function renderSummary(rows) {
     return;
   }
 
+  if (state.selectedGame === "mtmc") {
+    elements.summary.innerHTML = `
+      <article class="summary-feature"><span>Current leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.total ?? 0} of 10 made cut</small></article>
+      <article><span>Leading total</span><strong>${leader?.total ?? "—"}</strong><small>Players through cut</small></article>
+      <article><span>Cut line</span><strong>${state.live.event.cutLine == null ? "—" : tournamentScore(state.live.event.cutLine)}</strong><small>After Round 2</small></article>
+      <article><span>Field</span><strong>${fieldSize}</strong><small>Teams</small></article>`;
+    return;
+  }
+
+  if (state.selectedGame === "spread") {
+    elements.summary.innerHTML = `
+      <article class="summary-feature"><span>Current leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.total == null ? "No rounds yet" : `${leader.total} stroke spread`}</small></article>
+      <article><span>Leading spread</span><strong>${leader?.total ?? "—"}</strong><small>Best to worst round</small></article>
+      <article><span>Rounds used</span><strong>${leader?.countedRoundCount ?? 0}</strong><small>Posted main-golfer rounds</small></article>
+      <article><span>Field</span><strong>${fieldSize}</strong><small>Teams</small></article>`;
+    return;
+  }
+
   elements.summary.innerHTML = `
     <article class="summary-feature"><span>Current ${config.label} leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.toPar == null ? "No score" : tournamentScore(leader.toPar)} through R${state.selectedRound}</small></article>
     <article><span>Leading total</span><strong>${leader?.total ?? "—"}</strong><small>${leader?.countedRoundCount || 0} rounds counted</small></article>
@@ -168,7 +222,7 @@ function renderSummary(rows) {
 function configureView() {
   const config = GAME_CONFIG[state.selectedGame];
   const roundTitle = state.selectedRound === 4 ? "Final Round" : `Round ${state.selectedRound}`;
-  elements.title.textContent = `${roundTitle} ${config.label} leaderboard`;
+  elements.title.textContent = config.overview ? `${roundTitle} game overview` : `${roundTitle} ${config.label} leaderboard`;
   elements.kicker.textContent = config.kicker;
   elements.teamHeader.textContent = "Team";
   elements.cumulativeHeader.textContent = config.totalHeader;
@@ -191,18 +245,26 @@ function rowSubtitle(row) {
   }
   if (state.selectedGame === "straight") return row.runScores?.length ? row.runScores.join("–") : "No string yet";
   if (state.selectedGame === "flush") return row.flushScore == null ? "No flush yet" : `${row.flushCount} rounds of ${row.flushScore}`;
+  if (state.selectedGame === "mtmc") return `${row.total ?? 0} of 10 main golfers made the cut`;
+  if (state.selectedGame === "spread") {
+    if (row.total == null) return "Waiting";
+    return `Best ${row.bestRound?.score ?? "—"} · Worst ${row.worstRound?.score ?? "—"}`;
+  }
   return "";
 }
 
 function primaryValue(row) {
   if (state.selectedGame === "straight") return row.length;
   if (state.selectedGame === "flush") return row.flushCount;
+  if (state.selectedGame === "mtmc") return row.total == null ? "—" : `${row.total}/10`;
   return row.total ?? "—";
 }
 
 function primaryMeta(row) {
   if (state.selectedGame === "straight") return row.runScores?.join("–") || "—";
   if (state.selectedGame === "flush") return row.flushScore == null ? "—" : `${row.flushScore}s`;
+  if (state.selectedGame === "mtmc") return "Made cut";
+  if (state.selectedGame === "spread") return "Strokes";
   return tournamentScore(row.toPar);
 }
 
@@ -211,6 +273,8 @@ function secondaryValue(row) {
   if (state.selectedGame === "flush") return row.flushScore ?? "—";
   if (state.selectedGame === "b4r" && state.selectedRound > 1) return row.tieBreakRound?.score ?? "—";
   if (state.selectedGame === "brow") return row.tieBreakTotal ?? "—";
+  if (state.selectedGame === "mtmc") return state.selectedRound >= 3 ? "Final" : "Pending";
+  if (state.selectedGame === "spread") return row.countedRoundCount ?? 0;
   return `${row.countedRoundCount || 0}`;
 }
 
@@ -219,6 +283,8 @@ function secondaryMeta() {
   if (state.selectedGame === "flush") return "Score";
   if (state.selectedGame === "b4r" && state.selectedRound > 1) return "Next";
   if (state.selectedGame === "brow") return "BROW2";
+  if (state.selectedGame === "mtmc") return "Cut";
+  if (state.selectedGame === "spread") return "Rounds";
   return "Rounds";
 }
 
@@ -232,12 +298,56 @@ function renderRows(rows) {
   </article>`).join("");
 }
 
+function overviewGameEntries() {
+  return Object.entries(GAME_CONFIG).filter(([, config]) => !config.overview);
+}
+
+function overviewTotal(row, gameKey) {
+  if (gameKey === "mtmc") return row.total == null ? "—" : `${row.total}/10`;
+  return row.total ?? row.length ?? row.flushCount ?? "—";
+}
+
+function overviewStatus(row, gameKey) {
+  if (gameKey === "straight") return row.runScores?.join("–") || "—";
+  if (gameKey === "flush") return row.flushScore == null ? "—" : `${row.flushScore}s`;
+  if (gameKey === "mtmc") return state.selectedRound >= 3 ? "Cut" : "Pending";
+  if (gameKey === "spread") return row.total == null ? "Waiting" : `${row.bestRound?.score ?? "—"}-${row.worstRound?.score ?? "—"}`;
+  const currentRounds = row.golfers?.flatMap((golfer) => golfer.rounds.filter((round) => round.roundNumber === state.selectedRound)) || [];
+  if (currentRounds.some((round) => round.state === "playing")) return "Live";
+  if (currentRounds.length && currentRounds.every((round) => ["complete", "missed_cut", "withdrawn"].includes(round.state))) return "F";
+  return "Pending";
+}
+
+function renderOverview() {
+  const query = state.query.toLowerCase();
+  const cards = overviewGameEntries().map(([gameKey, config]) => {
+    const rows = config.build(state.picks, state.live.players, state.selectedRound, state.live.event.par)
+      .filter((row) => !query || row.contestant.toLowerCase().includes(query))
+      .slice(0, 15);
+    const body = rows.length ? rows.map((row) => `
+      <tr>
+        <td>${row.rank}</td>
+        <td>${escapeHtml(row.contestant)}</td>
+        <td>${overviewTotal(row, gameKey)}</td>
+        <td>${escapeHtml(overviewStatus(row, gameKey))}</td>
+      </tr>`).join("") : `<tr><td colspan="4">No matches</td></tr>`;
+    return `<section class="overview-card">
+      <header>${escapeHtml(config.label)}</header>
+      <table>
+        <thead><tr><th>Pos</th><th>Team</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </section>`;
+  }).join("");
+  elements.leaderboard.innerHTML = `<div class="overview-grid">${cards}</div>`;
+}
+
 function render() {
   if (!state.live || !state.picks.length) return;
   const config = GAME_CONFIG[state.selectedGame];
-  const rows = config.build(state.picks, state.live.players, state.selectedRound, state.live.event.par);
+  const rows = config.overview ? [] : config.build(state.picks, state.live.players, state.selectedRound, state.live.event.par);
   const query = state.query.toLowerCase();
-  const filtered = rows.filter((row) => !query || row.contestant.toLowerCase().includes(query) || row.golfers.some((golfer) => (
+  const filtered = config.overview ? [] : rows.filter((row) => !query || row.contestant.toLowerCase().includes(query) || row.golfers.some((golfer) => (
     golfer.pickName.toLowerCase().includes(query) || golfer.displayName.toLowerCase().includes(query)
   )));
 
@@ -251,7 +361,13 @@ function render() {
   document.body.dataset.game = state.selectedGame;
   document.body.dataset.round = String(state.selectedRound);
   document.body.classList.toggle("hide-round-count", state.selectedGame === "b4r" && state.selectedRound > 1);
+  document.body.classList.toggle("overview-view", config.overview);
   renderSummary(rows);
+
+  if (config.overview) {
+    renderOverview();
+    return;
+  }
 
   if (!filtered.length) {
     elements.leaderboard.innerHTML = '<div class="empty"><strong>No matches found</strong><span>Try a team or golfer’s last name.</span></div>';
@@ -301,6 +417,14 @@ elements.tabs.addEventListener("click", (event) => {
 });
 
 elements.search.addEventListener("input", (event) => {
+  state.query = event.target.value.trim();
+  render();
+});
+elements.search.addEventListener("keyup", (event) => {
+  state.query = event.target.value.trim();
+  render();
+});
+elements.search.addEventListener("search", (event) => {
   state.query = event.target.value.trim();
   render();
 });
