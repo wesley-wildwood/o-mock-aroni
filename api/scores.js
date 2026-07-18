@@ -2,6 +2,7 @@ const EVENT_ID = process.env.ESPN_EVENT_ID || "401811957";
 const ESPN_URL = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?event=${EVENT_ID}`;
 const EVENT_PAR = Number.parseInt(process.env.EVENT_PAR || "70", 10);
 const EVENT_VENUE = process.env.EVENT_VENUE || "Royal Birkdale";
+const EVENT_CUT_PLACES = Number.parseInt(process.env.EVENT_CUT_PLACES || "70", 10);
 
 function parseToPar(value) {
   if (value === "E" || value === "-" || value == null) return 0;
@@ -28,7 +29,8 @@ function computeCutLine(competitors, par) {
     return [rounds[0].value + rounds[1].value - par * 2];
   }).sort((a, b) => a - b);
   if (!completed.length) return null;
-  return completed[Math.min(59, completed.length - 1)];
+  const places = Number.isFinite(EVENT_CUT_PLACES) && EVENT_CUT_PLACES > 0 ? EVENT_CUT_PLACES : 70;
+  return completed[Math.min(places - 1, completed.length - 1)];
 }
 
 function shapePlayer(competitor, { currentRound, cutLine, par }) {

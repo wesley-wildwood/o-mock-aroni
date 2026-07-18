@@ -362,7 +362,7 @@ export function buildSpreadLeaderboard(picks, livePlayers, selectedRound, par = 
     };
   });
 
-  return rankedRows(rows, (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity));
+  return rankedRows(rows, (a, b) => (b.total ?? -Infinity) - (a.total ?? -Infinity));
 }
 
 function awardEligibleRounds(team) {

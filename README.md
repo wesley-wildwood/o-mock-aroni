@@ -24,7 +24,7 @@ Open `http://localhost:3000`. The local server proxies live scoring through `/ap
 - **Straight:** longest consecutive score string among the 10 main golfers' posted rounds through the selected day. Ties are broken by the lowest starting score.
 - **Flush:** largest group of identical scores among the 10 main golfers' posted rounds through the selected day. Equal-size groups are broken by the lower score, then the next group.
 - **MTMC:** Most to Make Cut. Teams rank by the number of main golfers who make the cut after Round 2. There are no tiebreakers.
-- **Spread:** difference between each team's best and worst posted round among its 10 main golfers. Lowest spread wins. There are no tiebreakers.
+- **Spread:** difference between each team's best and worst posted round among its 10 main golfers. Widest spread wins. There are no tiebreakers.
 
 ## Withdrawal Replacement
 
@@ -40,6 +40,7 @@ The live event defaults to ESPN's 2026 Open Championship event:
 ESPN_EVENT_ID=401811957
 EVENT_PAR=70
 EVENT_VENUE=Royal Birkdale
+EVENT_CUT_PLACES=70
 ```
 
 ## Deploy

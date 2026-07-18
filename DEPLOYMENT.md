@@ -53,6 +53,7 @@ Because you are reusing the same Vercel project, update the existing tournament 
 ESPN_EVENT_ID=401811957
 EVENT_PAR=70
 EVENT_VENUE=Royal Birkdale
+EVENT_CUT_PLACES=70
 SUPABASE_URL=your existing Supabase Project URL
 SUPABASE_SECRET_KEY=your existing Supabase server-side secret key
 ```

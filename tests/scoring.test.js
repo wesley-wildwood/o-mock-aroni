@@ -311,17 +311,17 @@ test("MTMC ranks teams by most main golfers making the cut with shared ranks", (
   ]);
 });
 
-test("Spread ranks teams by lowest difference between best and worst main-golfer rounds", () => {
+test("Spread ranks teams by widest difference between best and worst main-golfer rounds", () => {
   const tight = pick("Tight", { 1: [68], 2: [69], 3: [70], 4: [71], 5: [72], 6: [73], 7: [74], 8: [75], 9: [76], 10: [77] });
   const wide = pick("Wide", { 1: [65], 2: [69], 3: [70], 4: [71], 5: [72], 6: [73], 7: [74], 8: [75], 9: [76], 10: [80] });
   const rows = buildSpreadLeaderboard([wide.row, tight.row], [...wide.players, ...tight.players], 1, 71);
 
   assert.deepEqual(rows.map((row) => [row.contestant, row.total, row.rank]), [
-    ["Tight", 9, 1],
-    ["Wide", 15, 2]
+    ["Wide", 15, 1],
+    ["Tight", 9, 2]
   ]);
-  assert.equal(rows[0].bestRound.score, 68);
-  assert.equal(rows[0].worstRound.score, 77);
+  assert.equal(rows[0].bestRound.score, 65);
+  assert.equal(rows[0].worstRound.score, 80);
 });
 
 test("missed-cut golfers remain visible but cannot count in weekend rounds", () => {
