@@ -232,12 +232,12 @@ body[data-game="flush"] .award-row .golfer.counting { background: #f0e8f2; box-s
   .summary strong { font-size: 29px; }
   .leaderboard-head h2 { font-size: 30px; }
   .leaderboard { overflow-x: hidden; }
-  .leader-row { grid-template-columns: 42px minmax(0, 1fr) 72px 72px; overflow: hidden; }
+  .leader-row { grid-template-columns: 42px minmax(0, 1fr) 72px 72px; overflow: visible; max-width: 100%; }
   .leader-row > div:not(.golfers) { padding: 12px 8px; }
   .contestant span { white-space: normal; line-height: 1.5; }
   .total strong, .round-score strong { font-size: 24px; }
   .total span, .round-score span { display: block; margin: 2px 0 0; }
-  .golfers { width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; grid-template-columns: repeat(5, 145px); }
+  .golfers { grid-column: 1 / -1; width: 100%; max-width: calc(100vw - 28px); overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; grid-template-columns: repeat(5, 145px); scrollbar-width: thin; }
   .pool-row .golfers { grid-template-columns: repeat(5, 170px); }
   .pool-row .golfers.alt-pool { grid-template-columns: repeat(3, 190px); }
   .alt-row .golfers { grid-template-columns: repeat(3, 210px); }
