@@ -120,6 +120,13 @@ function tournamentScore(value) {
   return value === 0 ? "E" : value > 0 ? `+${value}` : String(value);
 }
 
+function scoreRange(scores = []) {
+  if (!scores.length) return "No string yet";
+  const first = scores[0];
+  const last = scores[scores.length - 1];
+  return first === last ? String(first) : `${first}-${last}`;
+}
+
 function golferStatus(round) {
   if (round.state === "missed_cut") return "MC";
   if (round.state === "withdrawn") return "WD";
@@ -177,7 +184,7 @@ function renderSummary(rows) {
 
   if (state.selectedGame === "straight") {
     elements.summary.innerHTML = `
-      <article class="summary-feature"><span>Current leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.runScores?.join("–") || "No string yet"}</small></article>
+      <article class="summary-feature"><span>Current leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${scoreRange(leader?.runScores)}</small></article>
       <article><span>Longest string</span><strong>${leader?.length ?? "—"}</strong><small>Consecutive scores</small></article>
       <article><span>Starting score</span><strong>${Number.isFinite(leader?.startScore) ? leader.startScore : "—"}</strong><small>Current tie-break</small></article>
       <article><span>Eligible rounds</span><strong>${state.selectedRound * 10}</strong><small>10 main golfers through R${state.selectedRound}</small></article>`;
@@ -243,7 +250,7 @@ function rowSubtitle(row) {
     const tiebreak = row.tieBreakRound ? `Next: R${row.tieBreakRound.roundNumber} ${row.tieBreakRound.pickName} ${row.tieBreakRound.score}` : "Next: waiting";
     return `Best: ${best} · ${tiebreak}`;
   }
-  if (state.selectedGame === "straight") return row.runScores?.length ? row.runScores.join("–") : "No string yet";
+  if (state.selectedGame === "straight") return scoreRange(row.runScores);
   if (state.selectedGame === "flush") return row.flushScore == null ? "No flush yet" : `${row.flushCount} rounds of ${row.flushScore}`;
   if (state.selectedGame === "mtmc") return `${row.total ?? 0} of 10 main golfers made the cut`;
   if (state.selectedGame === "spread") {
@@ -261,7 +268,7 @@ function primaryValue(row) {
 }
 
 function primaryMeta(row) {
-  if (state.selectedGame === "straight") return row.runScores?.join("–") || "—";
+  if (state.selectedGame === "straight") return scoreRange(row.runScores);
   if (state.selectedGame === "flush") return row.flushScore == null ? "—" : `${row.flushScore}s`;
   if (state.selectedGame === "mtmc") return "Made cut";
   if (state.selectedGame === "spread") return "Strokes";
@@ -308,7 +315,7 @@ function overviewTotal(row, gameKey) {
 }
 
 function overviewStatus(row, gameKey) {
-  if (gameKey === "straight") return row.runScores?.join("–") || "—";
+  if (gameKey === "straight") return scoreRange(row.runScores);
   if (gameKey === "flush") return row.flushScore == null ? "—" : `${row.flushScore}s`;
   if (gameKey === "mtmc") return state.selectedRound >= 3 ? "Cut" : "Pending";
   if (gameKey === "spread") return row.total == null ? "Waiting" : `${row.bestRound?.score ?? "—"}-${row.worstRound?.score ?? "—"}`;
