@@ -1,13 +1,15 @@
-# Update Existing Deployment For The O'Moroney
+# Deploy The St. Jude Classic Leaderboard
 
-Use these steps to update the same GitHub repository, Supabase project, and Vercel project that powered the Scottish Open build.
+Use these steps to update the same GitHub repository, Supabase project, and Vercel project used for the prior fantasy golf build.
 
-## 1. Update The Existing GitHub Repository
+The packaged app includes both contests, **MAC** and **Aroni**, with an in-page toggle. That is the simplest deployment. You can later add separate Vercel domains or subdomains that point to the same project.
 
-1. Download and unzip the latest O'Moroney project archive.
-2. Open your existing GitHub repo for the Vercel project, for example `o-mock-aroni`.
+## 1. Update GitHub
+
+1. Download and unzip the latest St. Jude Classic project archive.
+2. Open the existing GitHub repo connected to Vercel.
 3. Upload the extracted project contents into the repository root.
-4. Replace the existing files when GitHub asks.
+4. Replace existing files when GitHub asks.
 5. Confirm these are visible at the top level:
    - `api`
    - `public`
@@ -16,10 +18,11 @@ Use these steps to update the same GitHub repository, Supabase project, and Verc
    - `vercel.json`
    - `README.md`
    - `DEPLOYMENT.md`
-6. Confirm the picks file is present:
+6. Confirm both contest files are present:
 
 ```text
-public/data/omoroney-picks.csv
+public/data/mac-picks.csv
+public/data/aroni-picks.csv
 ```
 
 7. Commit the changes directly to `main`.
@@ -30,7 +33,7 @@ Do not upload `.env` files or Supabase secret keys.
 
 No new Supabase project is required.
 
-If you already ran `supabase/migrations/001_initial.sql`, you do not need to run it again. The same `score_snapshots` table can store Open Championship snapshots because each row includes `event_id`.
+If `supabase/migrations/001_initial.sql` has already been run, you do not need to run it again. The same `score_snapshots` table can store this event because each row includes `event_id`.
 
 If Supabase was not set up yet:
 
@@ -40,27 +43,23 @@ If Supabase was not set up yet:
 4. Paste the full contents of `supabase/migrations/001_initial.sql`.
 5. Click **Run**.
 
-## 3. Update Existing Vercel Environment Variables
-
-Because you are reusing the same Vercel project, update the existing tournament variables.
+## 3. Update Vercel Environment Variables
 
 1. Go to [vercel.com](https://vercel.com).
-2. Open the existing project, for example `o-mock-aroni`.
+2. Open the existing project.
 3. Go to **Settings > Environment Variables**.
 4. Set or update:
 
 ```text
-ESPN_EVENT_ID=401811957
+ESPN_EVENT_ID=401811962
 EVENT_PAR=70
-EVENT_VENUE=Royal Birkdale
+EVENT_VENUE=TPC Southwind
 EVENT_CUT_PLACES=70
 SUPABASE_URL=your existing Supabase Project URL
 SUPABASE_SECRET_KEY=your existing Supabase server-side secret key
 ```
 
 Apply the variables to **Production**, **Preview**, and **Development**.
-
-The code also defaults to the Open Championship values, but Vercel environment variables override the code defaults. If old Scottish Open values remain in Vercel, the site will keep loading Scottish Open scores.
 
 ## 4. Redeploy On Vercel
 
@@ -76,32 +75,41 @@ To redeploy manually:
 ## 5. Verify The Site
 
 1. Open the live URL in an incognito/private browser window.
-2. Confirm the header says **O'Moroney 2026**.
-3. Confirm the course card says **Royal Birkdale** and **Par 70**.
-4. Confirm the tabs work:
-   - `Overview`
-   - `B4R`
-   - `BROW`
-   - `ART`
-   - `Alt B4R`
-   - `Straight`
-   - `Flush`
-   - `MTMC`
-   - `Spread`
-5. Open:
+2. Confirm the header says **St. Jude Classic**.
+3. Confirm the course card says **TPC Southwind** and **Par 70**.
+4. Confirm the contest toggle works:
+   - `MAC`
+   - `Aroni`
+5. Confirm the game toggle works:
+   - `B4R4`
+   - `Alt B4R4`
+6. Open:
 
 ```text
 https://YOUR-VERCEL-URL.vercel.app/api/scores
 ```
 
-It should return JSON with `event.id` equal to `401811957`.
+It should return JSON with `event.id` equal to `401811962`.
 
-6. In Supabase, open **Table Editor > score_snapshots**. New rows should appear with the Open Championship `event_id`.
+7. In Supabase, open **Table Editor > score_snapshots**. New rows should appear with the St. Jude event id.
+
+## 6. Optional Separate URLs Or Subdomains
+
+The current build uses one shared URL with a visible MAC/Aroni toggle. That is easiest to maintain.
+
+If you want separate public-facing URLs, the cleanest Vercel setup is:
+
+1. Keep one Vercel project and one GitHub repo.
+2. Add two custom domains or subdomains in **Vercel > Project > Settings > Domains**, for example:
+   - `mac.yourdomain.com`
+   - `aroni.yourdomain.com`
+3. Point both domains to the same Vercel project.
+4. Use the in-page toggle for now, or add default-contest routing later if you want each subdomain to open directly to its contest.
 
 ## Troubleshooting
 
-- **Site still shows the prior event:** update the Vercel environment variables, especially `ESPN_EVENT_ID`, then redeploy.
+- **Site still shows the prior event:** update `ESPN_EVENT_ID` to `401811962`, then redeploy.
 - **Scores delayed:** open `/api/scores` directly and check Vercel **Project > Logs**.
 - **`/api/scores` returns `NOT_FOUND`:** confirm `api/scores.js` is at the repository root.
-- **A golfer shows “No feed”:** the CSV name did not match ESPN's golfer name. Update the name in `public/data/omoroney-picks.csv`, commit, and redeploy.
+- **A golfer shows “No feed”:** the CSV name did not match ESPN's golfer name. Update the name in `public/data/mac-picks.csv` or `public/data/aroni-picks.csv`, commit, and redeploy.
 - **Supabase has no new rows:** recheck `SUPABASE_URL` and `SUPABASE_SECRET_KEY`, then redeploy.

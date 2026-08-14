@@ -43,7 +43,7 @@ export function parsePicksCsv(text) {
     rows.push(row);
   }
 
-  const headers = rows.shift();
+  const headers = rows.shift() || [];
   return rows
     .map((values) => normalizePickRow(Object.fromEntries(headers.map((header, i) => [header, values[i] || ""]))))
     .filter((row) => row.Contestant && Object.entries(row).some(([key, value]) => /^Golfer \d+$/.test(key) && value));
@@ -57,12 +57,11 @@ function normalizePickRow(row) {
     "Alt 2": row["Alt 2"] || row["Second Alt"] || row.Second || "",
     "Alt 3": row["Alt 3"] || row["Third Alt"] || row.Third || "",
     "Alt 4": row["Alt 4"] || row["Fourth Alt"] || row.Fourth || "",
-    "Alt 5": row["Alt 5"] || row["Fifth Alt"] || row.Fifth || "",
-    "Alt 6": row["Alt 6"] || row["Sixth Alt"] || row.Sixth || ""
+    "Alt 5": row["Alt 5"] || row["Fifth Alt"] || row.Fifth || ""
   };
 }
 
-export function roundPace(round, par = 71) {
+export function roundPace(round, par = 70) {
   if (!round) return { score: null, state: "not_started" };
   if (round.strokes != null && round.holes >= 18) return { score: round.strokes, state: "complete" };
   if (round.toPar != null) return { score: round.holes > 0 ? par + round.toPar : null, state: round.holes > 0 ? "playing" : "not_started" };
@@ -99,40 +98,8 @@ function rankedRows(rows, compare, sameRank = (a, b) => compare(a, b) === 0) {
   });
 }
 
-function rankedScoreGroups(rows, scoreValue, compareWithinScore = () => 0) {
-  rows.sort((a, b) => {
-    const scoreDifference = (scoreValue(a) ?? Infinity) - (scoreValue(b) ?? Infinity);
-    return scoreDifference || compareWithinScore(a, b) || a.contestant.localeCompare(b.contestant);
-  });
-
-  let index = 0;
-  let baseRank = 1;
-  let groupNumber = 0;
-  const ranked = [];
-  while (index < rows.length) {
-    const score = scoreValue(rows[index]);
-    const group = [];
-    while (index < rows.length && scoreValue(rows[index]) === score) {
-      group.push(rows[index]);
-      index += 1;
-    }
-    const isFirstGroup = groupNumber === 0;
-    group.forEach((row, groupIndex) => {
-      const rank = isFirstGroup && group.length > 1 && groupIndex > 0 ? baseRank + 1 : baseRank;
-      ranked.push({ ...row, rank });
-    });
-    baseRank += group.length;
-    groupNumber += 1;
-  }
-  return ranked;
-}
-
 function buildPlayersByName(livePlayers) {
   return new Map(livePlayers.map((player) => [normalizeName(player.name), player]));
-}
-
-function isWithdrawn(player) {
-  return player?.status === "withdrawn";
 }
 
 function buildRoundEntry({ pickName, player, roundNumber, par, column }) {
@@ -145,7 +112,8 @@ function buildRoundEntry({ pickName, player, roundNumber, par, column }) {
     round: null,
     score: null,
     state: "unavailable",
-    counting: false
+    counting: false,
+    tieBreaking: false
   };
   if (!player) return base;
   const pace = playerRoundPace(player, roundNumber, par);
@@ -157,37 +125,28 @@ function buildRoundEntry({ pickName, player, roundNumber, par, column }) {
   };
 }
 
-function buildTeamGolfers(row, livePlayers, throughRound, par, columns, { replaceWithdrawals = false } = {}) {
+function buildTeamGolfers(row, livePlayers, throughRound, par, columns) {
   const playersByName = buildPlayersByName(livePlayers);
   return columns.map((column) => {
-    const originalPickName = row[column];
-    const originalPlayer = playersByName.get(normalizeName(pickNameToDisplay(originalPickName)));
-    const replacementPickName = row["Alt 1"];
-    const replacementPlayer = replacementPickName ? playersByName.get(normalizeName(pickNameToDisplay(replacementPickName))) : null;
-    const replacement = replaceWithdrawals && isWithdrawn(originalPlayer) && replacementPickName;
-    const pickName = replacement ? replacementPickName : originalPickName;
-    const player = replacement ? replacementPlayer : originalPlayer;
+    const pickName = row[column];
+    const player = playersByName.get(normalizeName(pickNameToDisplay(pickName)));
     const rounds = Array.from({ length: throughRound }, (_, index) => {
       const roundNumber = index + 1;
       return buildRoundEntry({ pickName, player, roundNumber, par, column });
     });
     return {
       pickName,
-      originalPickName,
       displayName: player?.name || pickNameToDisplay(pickName),
       player,
-      replacement: Boolean(replacement),
-      replacementFor: replacement ? originalPickName : null,
-      originalPlayer,
       rounds
     };
   });
 }
 
-function allRounds(golfers, { includeNotStarted = true } = {}) {
+function allRounds(golfers) {
   return golfers
     .flatMap((golfer) => golfer.rounds.map((round) => ({ ...round, pickName: golfer.pickName, displayName: golfer.displayName, player: golfer.player })))
-    .filter((round) => round.score != null && (includeNotStarted || round.state !== "not_started"));
+    .filter((round) => round.score != null);
 }
 
 function sortedRounds(rounds) {
@@ -205,21 +164,24 @@ function markCountingRounds(golfers, countingKeys, tieBreakKeys = new Set()) {
   }));
 }
 
-function buildPoolRows(picks, livePlayers, throughRound, par, columns, options) {
+function buildPoolRows(picks, livePlayers, throughRound, par, columns) {
   return picks.map((pick) => ({
     contestant: pick.Contestant,
-    golfers: buildTeamGolfers(pick, livePlayers, throughRound, par, columns, options)
+    golfers: buildTeamGolfers(pick, livePlayers, throughRound, par, columns)
   }));
 }
 
-export const MAIN_GOLFER_COLUMNS = Array.from({ length: 10 }, (_, index) => `Golfer ${index + 1}`);
-export const ALT_GOLFER_COLUMNS = Array.from({ length: 6 }, (_, index) => `Alt ${index + 1}`);
+function bestOneRoundPerGolfer(golfers) {
+  return golfers
+    .map((golfer) => sortedRounds(golfer.rounds.filter((round) => round.score != null))[0])
+    .filter(Boolean);
+}
 
-export function buildB4RLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const postedRounds = sortedRounds(allRounds(team.golfers));
-    const countedRounds = postedRounds.slice(0, 4);
-    const tieBreakRounds = postedRounds.slice(4);
+function buildB4R4Rows(picks, livePlayers, selectedRound, par, columns) {
+  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, columns).map((team) => {
+    const bestByGolfer = sortedRounds(bestOneRoundPerGolfer(team.golfers));
+    const countedRounds = bestByGolfer.slice(0, 4);
+    const tieBreakRounds = bestByGolfer.slice(4);
     const tieBreakRound = tieBreakRounds[0] || null;
     const countingKeys = new Set(countedRounds.map((round) => round.key));
     const tieBreakKeys = new Set(tieBreakRound ? [tieBreakRound.key] : []);
@@ -233,188 +195,25 @@ export function buildB4RLeaderboard(picks, livePlayers, selectedRound, par = 71)
       tieBreakScores: tieBreakRounds.map((round) => round.score),
       total,
       toPar: total == null ? null : total - par * countedRounds.length
-    };
-  });
-
-  return rankedScoreGroups(rows, (row) => row.total, (a, b) => compareScoreSequences(a.tieBreakScores, b.tieBreakScores));
-}
-
-export function buildBROWLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const bestByGolfer = [];
-    const secondBestByGolfer = [];
-    team.golfers.forEach((golfer) => {
-      const rounds = sortedRounds(golfer.rounds.filter((round) => round.score != null));
-      if (rounds[0]) bestByGolfer.push({ ...rounds[0], pickName: golfer.pickName });
-      if (rounds[1]) secondBestByGolfer.push({ ...rounds[1], pickName: golfer.pickName });
-    });
-    const countingKeys = new Set(bestByGolfer.map((round) => round.key));
-    const total = bestByGolfer.length ? bestByGolfer.reduce((sum, round) => sum + round.score, 0) : null;
-    const tieBreakTotal = secondBestByGolfer.length ? secondBestByGolfer.reduce((sum, round) => sum + round.score, 0) : null;
-    return {
-      ...team,
-      golfers: markCountingRounds(team.golfers, countingKeys),
-      countedRounds: sortedRounds(bestByGolfer),
-      tieBreakRounds: sortedRounds(secondBestByGolfer),
-      countedRoundCount: bestByGolfer.length,
-      total,
-      tieBreakTotal,
-      toPar: total == null ? null : total - par * bestByGolfer.length
     };
   });
 
   return rankedRows(
     rows,
-    (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity) || (a.tieBreakTotal ?? Infinity) - (b.tieBreakTotal ?? Infinity),
-    (a, b) => a.total === b.total && a.tieBreakTotal === b.tieBreakTotal
+    (a, b) => (a.total ?? Infinity) - (b.total ?? Infinity) || compareScoreSequences(a.tieBreakScores, b.tieBreakScores),
+    (a, b) => a.total === b.total && compareScoreSequences(a.tieBreakScores, b.tieBreakScores) === 0
   );
 }
 
-export function buildARTLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const throughRound = Math.min(2, Math.max(1, selectedRound));
-  const rows = buildPoolRows(picks, livePlayers, throughRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const rounds = allRounds(team.golfers);
-    const countingKeys = new Set(rounds.map((round) => round.key));
-    const total = rounds.length ? rounds.reduce((sum, round) => sum + round.score, 0) : null;
-    return {
-      ...team,
-      golfers: markCountingRounds(team.golfers, countingKeys),
-      countedRounds: sortedRounds(rounds),
-      countedRoundCount: rounds.length,
-      total,
-      toPar: total == null ? null : total - par * rounds.length,
-      throughRound
-    };
-  });
+export const MAIN_GOLFER_COLUMNS = Array.from({ length: 7 }, (_, index) => `Golfer ${index + 1}`);
+export const ALT_GOLFER_COLUMNS = Array.from({ length: 5 }, (_, index) => `Alt ${index + 1}`);
 
-  return rankedScoreGroups(rows, (row) => row.total);
+export function buildB4R4Leaderboard(picks, livePlayers, selectedRound, par = 70) {
+  return buildB4R4Rows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS);
 }
 
-export function buildAltB4RLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, ALT_GOLFER_COLUMNS).map((team) => {
-    const postedRounds = sortedRounds(allRounds(team.golfers));
-    const countedRounds = postedRounds.slice(0, 4);
-    const tieBreakRounds = postedRounds.slice(4);
-    const tieBreakRound = tieBreakRounds[0] || null;
-    const countingKeys = new Set(countedRounds.map((round) => round.key));
-    const tieBreakKeys = new Set(tieBreakRound ? [tieBreakRound.key] : []);
-    const total = countedRounds.length ? countedRounds.reduce((sum, round) => sum + round.score, 0) : null;
-    return {
-      ...team,
-      golfers: markCountingRounds(team.golfers, countingKeys, tieBreakKeys),
-      countedRounds,
-      countedRoundCount: countedRounds.length,
-      tieBreakRound,
-      tieBreakScores: tieBreakRounds.map((round) => round.score),
-      total,
-      toPar: total == null ? null : total - par * countedRounds.length
-    };
-  });
-
-  return rankedScoreGroups(rows, (row) => row.total, (a, b) => compareScoreSequences(a.tieBreakScores, b.tieBreakScores));
-}
-
-function openingRoundsComplete(golfer) {
-  return [1, 2].every((roundNumber) => golfer.rounds.find((round) => round.roundNumber === roundNumber)?.score != null);
-}
-
-function madeCut(golfer) {
-  if (!golfer.player || golfer.player.status === "missed_cut" || golfer.player.status === "withdrawn") return false;
-  return openingRoundsComplete(golfer);
-}
-
-export function buildMTMCLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const throughRound = Math.max(2, selectedRound);
-  const rows = buildPoolRows(picks, livePlayers, throughRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const madeCutGolfers = team.golfers.filter(madeCut);
-    const countingKeys = new Set(madeCutGolfers.flatMap((golfer) => golfer.rounds.filter((round) => round.roundNumber <= 2).map((round) => round.key)));
-    const total = madeCutGolfers.length;
-    return {
-      ...team,
-      golfers: markCountingRounds(team.golfers, countingKeys),
-      countedRounds: madeCutGolfers.flatMap((golfer) => golfer.rounds.filter((round) => round.roundNumber <= 2 && round.score != null)),
-      countedRoundCount: total,
-      total,
-      toPar: null
-    };
-  });
-
-  return rankedRows(rows, (a, b) => b.total - a.total);
-}
-
-export function buildSpreadLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const rounds = sortedRounds(allRounds(team.golfers));
-    const bestRound = rounds[0] || null;
-    const worstRound = rounds.length ? rounds[rounds.length - 1] : null;
-    const spreadRounds = [bestRound, worstRound].filter(Boolean);
-    const countingKeys = new Set(spreadRounds.map((round) => round.key));
-    const total = bestRound && worstRound ? worstRound.score - bestRound.score : null;
-    return {
-      ...team,
-      golfers: markCountingRounds(team.golfers, countingKeys),
-      countedRounds: spreadRounds,
-      countedRoundCount: rounds.length,
-      bestRound,
-      worstRound,
-      total,
-      toPar: null
-    };
-  });
-
-  return rankedRows(rows, (a, b) => (b.total ?? -Infinity) - (a.total ?? -Infinity));
-}
-
-function awardEligibleRounds(team) {
-  return allRounds(team.golfers, { includeNotStarted: false });
-}
-
-export function buildStraightLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const rounds = awardEligibleRounds(team);
-    const scores = [...new Set(rounds.map((round) => round.score))].sort((a, b) => a - b);
-    const runs = [];
-    for (let startIndex = 0; startIndex < scores.length; startIndex += 1) {
-      let endIndex = startIndex;
-      while (endIndex + 1 < scores.length && scores[endIndex + 1] === scores[endIndex] + 1) endIndex += 1;
-      const runScores = scores.slice(startIndex, endIndex + 1);
-      runs.push({ runScores, length: runScores.length, startScore: runScores[0] ?? Infinity });
-      startIndex = endIndex;
-    }
-    const bestRun = runs.sort((a, b) => b.length - a.length || a.startScore - b.startScore)[0]
-      || { runScores: [], length: 0, startScore: Infinity };
-    const highlightedScores = new Set(bestRun.runScores);
-    const countingKeys = new Set(rounds.filter((round) => highlightedScores.has(round.score)).map((round) => round.key));
-    return { ...team, golfers: markCountingRounds(team.golfers, countingKeys), ...bestRun };
-  });
-
-  const compare = (a, b) => b.length - a.length || a.startScore - b.startScore;
-  return rankedRows(rows, compare);
-}
-
-function compareFlushGroups(a = [], b = []) {
-  const length = Math.max(a.length, b.length);
-  for (let index = 0; index < length; index += 1) {
-    const left = a[index] || { count: 0, score: Infinity };
-    const right = b[index] || { count: 0, score: Infinity };
-    if (left.count !== right.count) return right.count - left.count;
-    if (left.score !== right.score) return left.score - right.score;
-  }
-  return 0;
-}
-
-export function buildFlushLeaderboard(picks, livePlayers, selectedRound, par = 71) {
-  const rows = buildPoolRows(picks, livePlayers, selectedRound, par, MAIN_GOLFER_COLUMNS, { replaceWithdrawals: true }).map((team) => {
-    const rounds = awardEligibleRounds(team);
-    const counts = new Map();
-    for (const round of rounds) counts.set(round.score, (counts.get(round.score) || 0) + 1);
-    const groups = [...counts].map(([score, count]) => ({ score, count })).sort((a, b) => b.count - a.count || a.score - b.score);
-    const primary = groups[0] || { score: null, count: 0 };
-    const countingKeys = new Set(rounds.filter((round) => round.score === primary.score).map((round) => round.key));
-    return { ...team, golfers: markCountingRounds(team.golfers, countingKeys), groups, flushScore: primary.score, flushCount: primary.count };
-  });
-
-  return rankedRows(rows, (a, b) => compareFlushGroups(a.groups, b.groups));
+export function buildAltB4R4Leaderboard(picks, livePlayers, selectedRound, par = 70) {
+  return buildB4R4Rows(picks, livePlayers, selectedRound, par, ALT_GOLFER_COLUMNS);
 }
 
 export function formatToPar(score, parTotal) {

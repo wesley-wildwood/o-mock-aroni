@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0d2f27" />
-    <meta name="description" content="Live fantasy leaderboard for the 2026 O'Moroney at The Open Championship." />
-    <title>O'Moroney 2026 | Open Championship Fantasy Leaderboard</title>
+    <meta name="description" content="Live fantasy leaderboard for the 2026 St. Jude Classic contests." />
+    <title>St. Jude Classic | Fantasy Golf Leaderboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
@@ -15,23 +15,23 @@
     <div class="grain"></div>
     <header class="hero">
       <nav class="nav shell">
-        <a class="brand" href="/" aria-label="O'Moroney leaderboard home">
-          <span class="brand-mark">O</span>
-          <span>O'Moroney 2026 <small>Open Championship</small></span>
+        <a class="brand" href="/" aria-label="St. Jude Classic leaderboard home">
+          <span class="brand-mark">J</span>
+          <span>St. Jude Classic <small>MAC + Aroni</small></span>
         </a>
         <div class="live-status" id="liveStatus"><span></span> Connecting</div>
       </nav>
       <div class="hero-content shell">
         <div>
-          <p class="eyebrow">The Open Championship · July 16–19, 2026</p>
-          <h1>B4R</h1>
-          <p class="hero-copy">45 teams. Ten main golfers. Best four rounds lead the board.</p>
+          <p class="eyebrow">FedEx St. Jude Championship · August 13–16, 2026</p>
+          <h1 id="heroTitle">B4R4</h1>
+          <p class="hero-copy" id="heroCopy">MAC contest. Seven golfers. Best four rounds from four different golfers.</p>
         </div>
         <div class="course-card">
           <span class="course-number">01</span>
           <div>
-            <p>Royal Birkdale</p>
-            <span>Southport, England · Par 70</span>
+            <p>TPC Southwind</p>
+            <span>Memphis, Tennessee · Par 70</span>
           </div>
           <svg viewBox="0 0 72 52" aria-hidden="true"><path d="M3 43c8-16 19-6 26-19C36 11 47 7 68 8M5 47c13-7 20 2 31-7 8-7 15-9 31-7"/><circle cx="52" cy="14" r="3"/></svg>
         </div>
@@ -41,16 +41,13 @@
     <main class="shell main">
       <section class="controls" aria-label="Leaderboard controls">
         <div class="control-groups">
+          <div class="contest-tabs" id="contestTabs" aria-label="Contest view">
+            <button class="active" data-contest="mac" aria-pressed="true">MAC</button>
+            <button data-contest="aroni" aria-pressed="false">Aroni</button>
+          </div>
           <div class="game-tabs" id="gameTabs" aria-label="Game view">
-            <button data-game="overview" aria-pressed="false">Overview</button>
-            <button class="active" data-game="b4r" aria-pressed="true">B4R</button>
-            <button data-game="brow" aria-pressed="false">BROW</button>
-            <button data-game="art" aria-pressed="false">ART</button>
-            <button data-game="altb4r" aria-pressed="false">Alt B4R</button>
-            <button data-game="straight" aria-pressed="false">Straight</button>
-            <button data-game="flush" aria-pressed="false">Flush</button>
-            <button data-game="mtmc" aria-pressed="false">MTMC</button>
-            <button data-game="spread" aria-pressed="false">Spread</button>
+            <button class="active" data-game="b4r4" aria-pressed="true">B4R4</button>
+            <button data-game="altb4r4" aria-pressed="false">Alt B4R4</button>
           </div>
           <div class="round-tabs" id="roundTabs">
             <button data-round="1">Round 1</button>
@@ -69,14 +66,14 @@
 
       <section class="leaderboard-head">
         <div>
-          <p class="section-kicker" id="boardKicker">Best four rounds</p>
-          <h2 id="boardTitle">Round 1 B4R leaderboard</h2>
+          <p class="section-kicker" id="boardKicker">Best four from four golfers</p>
+          <h2 id="boardTitle">Round 1 MAC B4R4 leaderboard</h2>
         </div>
         <div class="updated" id="updatedAt">Waiting for scores…</div>
       </section>
 
       <div class="column-labels" aria-hidden="true">
-        <span>Pos</span><span id="teamHeader">Team</span><span id="cumulativeHeader">Best 4 total</span><span id="roundHeader">Rounds counted</span><span id="golfersHeader">10 main golfers</span>
+        <span>Pos</span><span id="teamHeader">Team</span><span id="cumulativeHeader">Best 4 total</span><span id="roundHeader">Next best</span><span id="golfersHeader">7 golfers</span>
       </div>
       <section id="leaderboard" class="leaderboard" aria-live="polite">
         <div class="loading-card"><div class="spinner"></div><p>Walking the course for live scores…</p></div>
@@ -84,7 +81,7 @@
     </main>
 
     <footer class="footer shell">
-      <p>O'Moroney 2026 · Open Championship · Unofficial scoring tracker</p>
+      <p>St. Jude Classic · MAC + Aroni · Unofficial scoring tracker</p>
       <p>Live scoring via ESPN · Auto-refreshes every 60 seconds</p>
     </footer>
     <script type="module" src="/app.js"></script>
