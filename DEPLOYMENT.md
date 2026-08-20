@@ -2,7 +2,7 @@
 
 Use these steps to update the same GitHub repository, Supabase project, and Vercel project used for the prior fantasy golf build.
 
-The packaged app includes both contests, **MAC** and **Aroni**, with an in-page toggle. That is the simplest deployment. You can later add separate Vercel domains or subdomains that point to the same project.
+The packaged app includes both contests, **MAC** and **Aroni**, with an in-page toggle. The default **At-a-Glance** tab shows compact top-15 standings for both B4R4 and Alt B4R4. That is the simplest deployment. You can later add separate Vercel domains or subdomains that point to the same project.
 
 ## 1. Update GitHub
 
@@ -81,6 +81,7 @@ To redeploy manually:
    - `MAC`
    - `Aroni`
 5. Confirm the game toggle works:
+   - `At-a-Glance`
    - `B4R4`
    - `Alt B4R4`
 6. Open:

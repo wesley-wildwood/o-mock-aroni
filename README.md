@@ -7,7 +7,7 @@ The app includes two contests:
 - **MAC**
 - **Aroni**
 
-Both contests play the same two games and can be toggled from the same live page.
+Both contests play the same games and can be toggled from the same live page. The default **At-a-Glance** view shows compact top-15 standings for the main and alternate games.
 
 ## Run Locally
 
@@ -23,6 +23,7 @@ Open `http://localhost:3000`. The local server proxies live scoring through `/ap
 
 - **B4R4:** Best 4 Rounds from 4 Different Golfers. Each team has 7 golfers. A team's score is the sum of the best four rounds from four different golfers across the tournament. One golfer can only contribute one counting round.
 - **Alt B4R4:** Alternate Golfer Best 4 Rounds from 4 Different Golfers. Each team has 5 alternates. A team's alternate score is the sum of the best four rounds from four different alternate golfers.
+- **At-a-Glance:** A compact home view showing the top 15 teams for B4R4 and Alt B4R4 without individual golfer cards.
 
 Ties are ordered by the next best available golfer round, then the next, until broken.
 

@@ -16,6 +16,13 @@ const CONTEST_CONFIG = {
 };
 
 const GAME_CONFIG = {
+  glance: {
+    label: "At-a-Glance",
+    kicker: "Contest overview",
+    totalHeader: "Total",
+    roundHeader: "Next best",
+    golferHeader: "Overview"
+  },
   b4r4: {
     label: "B4R4",
     kicker: "Best four from four golfers",
@@ -34,7 +41,7 @@ const GAME_CONFIG = {
   }
 };
 
-const state = { picksByContest: {}, live: null, selectedContest: "mac", selectedGame: "b4r4", selectedRound: 1, query: "" };
+const state = { picksByContest: {}, live: null, selectedContest: "mac", selectedGame: "glance", selectedRound: 1, query: "" };
 const elements = {
   leaderboard: document.querySelector("#leaderboard"),
   contestTabs: document.querySelector("#contestTabs"),
@@ -111,18 +118,25 @@ function currentPicks() {
 
 function currentRows() {
   const config = GAME_CONFIG[state.selectedGame];
+  if (!config.build) return [];
+  return config.build(currentPicks(), state.live.players, state.selectedRound, state.live.event.par);
+}
+
+function rowsForGame(gameKey) {
+  const config = GAME_CONFIG[gameKey];
   return config.build(currentPicks(), state.live.players, state.selectedRound, state.live.event.par);
 }
 
 function renderSummary(rows) {
-  const leader = rows[0];
+  const leaderRows = state.selectedGame === "glance" ? rowsForGame("b4r4") : rows;
+  const leader = leaderRows[0];
   const config = GAME_CONFIG[state.selectedGame];
   const picks = currentPicks();
   const onCourse = state.live.players.filter((player) => player.rounds?.[state.selectedRound]?.status === "playing").length;
   const completed = state.live.players.filter((player) => player.rounds?.[state.selectedRound]?.status === "complete").length;
 
   elements.summary.innerHTML = `
-    <article class="summary-feature"><span>Current ${CONTEST_CONFIG[state.selectedContest].label} ${config.label} leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.toPar == null ? "No score" : tournamentScore(leader.toPar)} through R${state.selectedRound}</small></article>
+    <article class="summary-feature"><span>Current ${CONTEST_CONFIG[state.selectedContest].label} ${config.label === "At-a-Glance" ? "B4R4" : config.label} leader</span><strong>${escapeHtml(leader?.contestant || "—")}</strong><small>${leader?.toPar == null ? "No score" : tournamentScore(leader.toPar)} through R${state.selectedRound}</small></article>
     <article><span>Leading total</span><strong>${leader?.total ?? "—"}</strong><small>${leader?.countedRoundCount || 0} golfers counted</small></article>
     <article><span>On the course</span><strong>${onCourse}</strong><small>${completed} finished today</small></article>
     <article><span>Field</span><strong>${picks.length}</strong><small>Teams</small></article>`;
@@ -132,14 +146,14 @@ function configureView() {
   const contest = CONTEST_CONFIG[state.selectedContest];
   const config = GAME_CONFIG[state.selectedGame];
   const roundTitle = state.selectedRound === 4 ? "Final Round" : `Round ${state.selectedRound}`;
-  elements.title.textContent = `${roundTitle} ${contest.label} ${config.label} leaderboard`;
+  elements.title.textContent = `${roundTitle} ${contest.label} ${config.label}${config.label === "At-a-Glance" ? "" : " leaderboard"}`;
   elements.kicker.textContent = config.kicker;
   elements.teamHeader.textContent = "Team";
   elements.cumulativeHeader.textContent = config.totalHeader;
   elements.roundHeader.textContent = config.roundHeader;
   elements.golfersHeader.textContent = config.golferHeader;
-  elements.heroTitle.textContent = config.label;
-  elements.heroCopy.textContent = `${contest.label} contest. ${currentPicks().length} teams. ${config.golferHeader}. Best four rounds from four different golfers.`;
+  elements.heroTitle.textContent = `${contest.label === "MAC" ? "The MAC" : contest.label} · Aug 20-23, 2026`;
+  elements.heroCopy.textContent = `${currentPicks().length} teams · 7 golfers each · B4R4`;
 }
 
 function rowSubtitle(row) {
@@ -167,6 +181,48 @@ function renderRows(rows) {
   </article>`).join("");
 }
 
+function formatGlanceNext(row) {
+  if (!row.tieBreakRound) return "Waiting";
+  return `R${row.tieBreakRound.roundNumber} ${row.tieBreakRound.pickName} ${row.tieBreakRound.score}`;
+}
+
+function renderGlanceTable({ title, kicker, rows, accent }) {
+  const visible = rows.slice(0, 15);
+  return `<article class="glance-card ${accent}">
+    <div class="glance-card-head">
+      <div>
+        <span>${escapeHtml(kicker)}</span>
+        <strong>${escapeHtml(title)}</strong>
+      </div>
+      <small>Top ${visible.length}</small>
+    </div>
+    <div class="glance-table">
+      <div class="glance-table-header"><span>Pos</span><span>Team</span><span>Total</span><span>Next</span></div>
+      ${visible.map((row) => `<div class="glance-table-row">
+        <span class="glance-rank">${row.rank}</span>
+        <strong>${escapeHtml(row.contestant)}</strong>
+        <span>${row.total ?? "—"} <small>${tournamentScore(row.toPar)}</small></span>
+        <em>${escapeHtml(formatGlanceNext(row))}</em>
+      </div>`).join("")}
+    </div>
+  </article>`;
+}
+
+function renderGlance() {
+  const query = state.query.toLowerCase();
+  const filterRows = (rows) => rows.filter((row) => !query || row.contestant.toLowerCase().includes(query));
+  const roundTitle = state.selectedRound === 4 ? "Final Round" : `Round ${state.selectedRound}`;
+  const b4r4Rows = filterRows(rowsForGame("b4r4"));
+  const altRows = filterRows(rowsForGame("altb4r4"));
+  if (!b4r4Rows.length && !altRows.length) {
+    return '<div class="empty"><strong>No matches found</strong><span>Try a team name.</span></div>';
+  }
+  return `<div class="glance-grid">
+    ${renderGlanceTable({ title: `${roundTitle} B4R4`, kicker: "Main game", rows: b4r4Rows, accent: "main-glance" })}
+    ${renderGlanceTable({ title: `${roundTitle} Alt B4R4`, kicker: "Alternate game", rows: altRows, accent: "alt-glance" })}
+  </div>`;
+}
+
 function render() {
   if (!state.live || !Object.keys(state.picksByContest).length) return;
   const rows = currentRows();
@@ -191,6 +247,11 @@ function render() {
   document.body.dataset.game = state.selectedGame;
   document.body.dataset.round = String(state.selectedRound);
   renderSummary(rows);
+
+  if (state.selectedGame === "glance") {
+    elements.leaderboard.innerHTML = renderGlance();
+    return;
+  }
 
   if (!filtered.length) {
     elements.leaderboard.innerHTML = '<div class="empty"><strong>No matches found</strong><span>Try a team or golfer’s last name.</span></div>';
