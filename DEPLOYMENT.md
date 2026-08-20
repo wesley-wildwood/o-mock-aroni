@@ -1,4 +1,4 @@
-# Deploy The St. Jude Classic Leaderboard
+# Deploy The BMW Championship Leaderboard
 
 Use these steps to update the same GitHub repository, Supabase project, and Vercel project used for the prior fantasy golf build.
 
@@ -6,7 +6,7 @@ The packaged app includes both contests, **MAC** and **Aroni**, with an in-page 
 
 ## 1. Update GitHub
 
-1. Download and unzip the latest St. Jude Classic project archive.
+1. Download and unzip the latest BMW Championship project archive.
 2. Open the existing GitHub repo connected to Vercel.
 3. Upload the extracted project contents into the repository root.
 4. Replace existing files when GitHub asks.
@@ -51,9 +51,9 @@ If Supabase was not set up yet:
 4. Set or update:
 
 ```text
-ESPN_EVENT_ID=401811962
+ESPN_EVENT_ID=401811963
 EVENT_PAR=70
-EVENT_VENUE=TPC Southwind
+EVENT_VENUE=Bellerive Country Club
 EVENT_CUT_PLACES=70
 SUPABASE_URL=your existing Supabase Project URL
 SUPABASE_SECRET_KEY=your existing Supabase server-side secret key
@@ -75,8 +75,8 @@ To redeploy manually:
 ## 5. Verify The Site
 
 1. Open the live URL in an incognito/private browser window.
-2. Confirm the header says **St. Jude Classic**.
-3. Confirm the course card says **TPC Southwind** and **Par 70**.
+2. Confirm the header says **BMW Championship**.
+3. Confirm the course card says **Bellerive Country Club** and **Par 70**.
 4. Confirm the contest toggle works:
    - `MAC`
    - `Aroni`
@@ -89,9 +89,9 @@ To redeploy manually:
 https://YOUR-VERCEL-URL.vercel.app/api/scores
 ```
 
-It should return JSON with `event.id` equal to `401811962`.
+It should return JSON with the BMW Championship event id, currently configured as `401811963`.
 
-7. In Supabase, open **Table Editor > score_snapshots**. New rows should appear with the St. Jude event id.
+7. In Supabase, open **Table Editor > score_snapshots**. New rows should appear with the BMW Championship event id.
 
 ## 6. Optional Separate URLs Or Subdomains
 
@@ -108,7 +108,7 @@ If you want separate public-facing URLs, the cleanest Vercel setup is:
 
 ## Troubleshooting
 
-- **Site still shows the prior event:** update `ESPN_EVENT_ID` to `401811962`, then redeploy.
+- **Site still shows the prior event:** update `ESPN_EVENT_ID` to `401811963`, then redeploy.
 - **Scores delayed:** open `/api/scores` directly and check Vercel **Project > Logs**.
 - **`/api/scores` returns `NOT_FOUND`:** confirm `api/scores.js` is at the repository root.
 - **A golfer shows “No feed”:** the CSV name did not match ESPN's golfer name. Update the name in `public/data/mac-picks.csv` or `public/data/aroni-picks.csv`, commit, and redeploy.

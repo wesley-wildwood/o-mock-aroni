@@ -1,6 +1,6 @@
-# St. Jude Classic Fantasy Leaderboard
+# BMW Championship Fantasy Leaderboard
 
-A live fantasy leaderboard for the 2026 St. Jude Classic contests, powered by the FedEx St. Jude Championship live feed from ESPN.
+A live fantasy leaderboard for the 2026 BMW Championship contests, powered by the BMW Championship live feed from ESPN.
 
 The app includes two contests:
 
@@ -28,12 +28,12 @@ Ties are ordered by the next best available golfer round, then the next, until b
 
 ## Event Setup
 
-The live event defaults to ESPN's 2026 FedEx St. Jude Championship event:
+The live event defaults to ESPN's 2026 BMW Championship event:
 
 ```text
-ESPN_EVENT_ID=401811962
+ESPN_EVENT_ID=401811963
 EVENT_PAR=70
-EVENT_VENUE=TPC Southwind
+EVENT_VENUE=Bellerive Country Club
 EVENT_CUT_PLACES=70
 ```
 
@@ -48,8 +48,8 @@ public/data/aroni-picks.csv
 
 Current field sizes:
 
-- MAC: 25 teams
-- Aroni: 29 teams
+- MAC: 28 teams
+- Aroni: 13 teams
 
 ## Deploy
 

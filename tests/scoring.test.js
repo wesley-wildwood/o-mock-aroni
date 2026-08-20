@@ -123,20 +123,20 @@ test("Alt B4R4 takes best four rounds from four different alternates", () => {
   ]);
 });
 
-test("MAC picks include 25 teams with 7 main golfers and 5 alternates", () => {
+test("MAC picks include 28 teams with 7 main golfers and 5 alternates", () => {
   const rows = parsePicksCsv(readFileSync(new URL("../public/data/mac-picks.csv", import.meta.url), "utf8"));
-  assert.equal(rows.length, 25);
-  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 25);
+  assert.equal(rows.length, 28);
+  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 28);
   for (const row of rows) {
     assert.equal(new Set(Array.from({ length: MAIN_COUNT }, (_, index) => row[`Golfer ${index + 1}`])).size, MAIN_COUNT);
     assert.equal(new Set(Array.from({ length: ALT_COUNT }, (_, index) => row[`Alt ${index + 1}`])).size, ALT_COUNT);
   }
 });
 
-test("Aroni picks include 29 teams with 7 main golfers and 5 alternates", () => {
+test("Aroni picks include 13 teams with 7 main golfers and 5 alternates", () => {
   const rows = parsePicksCsv(readFileSync(new URL("../public/data/aroni-picks.csv", import.meta.url), "utf8"));
-  assert.equal(rows.length, 29);
-  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 29);
+  assert.equal(rows.length, 13);
+  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 13);
   for (const row of rows) {
     assert.equal(new Set(Array.from({ length: MAIN_COUNT }, (_, index) => row[`Golfer ${index + 1}`])).size, MAIN_COUNT);
     assert.equal(new Set(Array.from({ length: ALT_COUNT }, (_, index) => row[`Alt ${index + 1}`])).size, ALT_COUNT);
