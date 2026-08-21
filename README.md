@@ -50,7 +50,7 @@ public/data/aroni-picks.csv
 Current field sizes:
 
 - MAC: 28 teams
-- Aroni: 13 teams
+- Aroni: 14 teams
 
 ## Deploy
 

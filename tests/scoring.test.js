@@ -133,10 +133,10 @@ test("MAC picks include 28 teams with 7 main golfers and 5 alternates", () => {
   }
 });
 
-test("Aroni picks include 13 teams with 7 main golfers and 5 alternates", () => {
+test("Aroni picks include 14 teams with 7 main golfers and 5 alternates", () => {
   const rows = parsePicksCsv(readFileSync(new URL("../public/data/aroni-picks.csv", import.meta.url), "utf8"));
-  assert.equal(rows.length, 13);
-  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 13);
+  assert.equal(rows.length, 14);
+  assert.equal(new Set(rows.map((row) => row.Contestant)).size, 14);
   for (const row of rows) {
     assert.equal(new Set(Array.from({ length: MAIN_COUNT }, (_, index) => row[`Golfer ${index + 1}`])).size, MAIN_COUNT);
     assert.equal(new Set(Array.from({ length: ALT_COUNT }, (_, index) => row[`Alt ${index + 1}`])).size, ALT_COUNT);
